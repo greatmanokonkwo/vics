@@ -18,7 +18,7 @@
 - Figure out powering servo motor
 - Figure out interfacing servo motor (Wired/Wireless?)
 
-2. Speech and Communications System
+## 2. Speech and Communications System
 
 ### Sofware
 
@@ -33,7 +33,7 @@
 - Buy mircrophone hardware
 - Buy speaker hardware
 
-3. GPS Guidance System
+## 3. GPS Guidance System
 
 ### Software
 
