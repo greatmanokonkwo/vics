@@ -47,3 +47,9 @@
 
 - Get GPS receiver
 - Wi-Fi connection module
+
+## Design
+
+- Build chest mount
+- Plastic back cover for hardware to be mounted on
+- Handle for servo motor gear 
