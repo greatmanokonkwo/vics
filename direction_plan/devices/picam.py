@@ -28,7 +28,7 @@ class picam:
 			ret_val, img = self.cam.read()
 			cv2.imwrite(path, img)
 		else:
-			print("Unable to open camera")
+			print("Unable to open amera")
 
 	def cleanup(self):
 		self.cam.release()

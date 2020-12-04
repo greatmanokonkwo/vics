@@ -7,7 +7,7 @@ Copyright 2019
 
 import smbus
 import time
-
+import math
 
 class mpu6050:
     # Global Variables
@@ -76,6 +76,9 @@ class mpu6050:
     ANGLE_X = 0
     ANGLE_Y = 0
     ANGLE_Z = 0
+
+    ACCEL_ERROR_X = 0
+    ACCEL_ERROR_Y = 0 
 
     def __init__(self, address):
         self.address = address
@@ -267,9 +270,9 @@ class mpu6050:
                 "Unkown range - gyro_scale_modifier set to self.GYRO_SCALE_MODIFIER_250DEG")
             gyro_scale_modifier = self.GYRO_SCALE_MODIFIER_250DEG
 
-        #x = x/gyro_scale_modifier
-        #y = y/gyro_scale_modifier
-        #z = z/gyro_scale_modifier
+        x = x/gyro_scale_modifier
+        y = y/gyro_scale_modifier
+        z = z/gyro_scale_modifier
 
         return {'x': x, 'y': y, 'z': z}
 
@@ -281,29 +284,28 @@ class mpu6050:
 
         return [accel, gyro, temp]
 
-    def gyro_calibrate(self):
-        print("Calibrating...")
-        for i in range(1000):
-            gyro_data = self.get_gyro_data()
-            self.GYRO_CALI_X += gyro_data['x']
-            self.GYRO_CALI_Y += gyro_data['y']
-            self.GYRO_CALI_Z += gyro_data['z']
+    def calculate_error(self):
+        print("Calibrating accelerometer... Don't move device")    
+        for i in range(2000):
+            accel_data = self.get_accel_data()
+            self.ACCEL_ERROR_X = self.ACCEL_ERROR_X + (math.atan(accel_data['y'] / math.sqrt(math.pow(accel_data['x'],2) + math.pow(accel_data['z'],2))) * 180 / math.pi) 
+            self.ACCEL_ERROR_Y = self.ACCEL_ERROR_Y + (-1*math.atan(accel_data['x'] / math.sqrt(math.pow(accel_data['y'],2) + math.pow(accel_data['z'],2))) * 180 / math.pi) 
 
-        self.GYRO_CALI_X /= 1000
-        self.GYRO_CALI_Y /= 1000
-        self.GYRO_CALI_Z /= 1000
+        self.ACCEL_ERROR_X /= 2000
+        self.ACCEL_ERROR_Y /= 2000
         print("Finished calibrating")
 
-    def get_angle_data(self):
-        """Integrates the angular velocity over time to get the displacement angle"""
-        gyro_present = self.get_gyro_data()
-        t_present = time.time()
+    def roll_and_pitch(self):
+        accel_data = self.get_accel_data()
 
-        self.ANGLE_X = ((t_present - self.T_PAST) * (round(gyro_present['x']) + round(self.GYRO_PAST['x']) - self.GYRO_CALI_X))*0.030451
-        self.ANGLE_Y = ((t_present - self.T_PAST) * (round(gyro_present['y']) + round(self.GYRO_PAST['y']) - self.GYRO_CALI_Y))*0.030451
-        self.ANGLE_Z = ((t_present - self.T_PAST) * (round(gyro_present['z']) + round(self.GYRO_PAST['z']) - self.GYRO_CALI_Z))*0.030451
+        roll = (math.atan(accel_data['y'] / math.sqrt(math.pow(accel_data['x'],2) + math.pow(accel_data['z'],2))) * 180 / math.pi) - self.ACCEL_ERROR_X
+        pitch = (math.atan(-1*accel_data['x'] / math.sqrt(math.pow(accel_data['y'],2) + math.pow(accel_data['z'],2))) * 180 / math.pi) - self.ACCEL_ERROR_Y
+	
+        return {"roll": roll, "pitch": pitch}
 
-        self.GYRO_PAST = gyro_present
-        self.T_PAST = t_present
-
-        return {'x': self.ANGLE_X, 'y': self.ANGLE_Y, 'z': self.ANGLE_Z}
+mpu = mpu6050(0x68)
+mpu.calculate_error()
+while True:
+	angles = mpu.roll_and_pitch()
+	print("Roll: " + str(angles["roll"]) + ", Pitch: " + str(angles["pitch"]))
+	time.sleep(1)
