@@ -1,9 +1,5 @@
 # VICS (Visual Impairment Companion System)
-
-<video width="320" height="240" autoplay>
-  <source src="vics_logo.mp4" type="video/mp4">
-  VICS Logo
- </video> 
+[vics_logo.mp4]
  
 **Powered by Nvidia**
 
