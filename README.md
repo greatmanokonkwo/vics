@@ -1,4 +1,4 @@
-# VICS (Visual Impairment Companion System)
+# V.I.C.S (Visual Impairment Companion System)
 ![VICS LOGO](vics_logo.gif)
  
 **Powered by Nvidia**
