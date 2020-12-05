@@ -1,5 +1,5 @@
 # VICS (Visual Impairment Companion System)
-[](vics_logo.mp4)
+![Alt Text](vics_logo.mp4)
  
 **Powered by Nvidia**
 
