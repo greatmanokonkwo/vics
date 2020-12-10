@@ -6,7 +6,7 @@
 VICS is an end-to-end learning based visual impairment device that strives that make the world more accessible to people who are visually impaired. VICS is currently made up of three separate systems that work to bring the world to the user via a suite of information rallying devices including vibration motors and speech enabled assistance.
 
 ## TO-DO 
-**NOTE:** All tasks involving the GPS Guidance System should be held off until everything else has been completed. This is only an extension of the project
+**NOTE:** All tasks involving the GPS Guidance System should be held off until everything else has been completed. This is only an extension of the project.
 
 ### General Hardware
 
