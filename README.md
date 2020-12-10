@@ -40,7 +40,7 @@ VICS is an end-to-end learning based visual impairment device that strives that 
 - [ ] Interface with microphone hardware
 - [ ] Interface with speaker hardware
 - [ ] Build object detection model as well as object location algorithm
-- [ ] Build WakeWord model for ai voice assistant (wake word: "Hey V.I.C.S")
+- [ ] Build WakeWord model for ai voice assistant (wake word: "Hey VICS")
 - [ ] Build Speech Recognition model to turn audio to text
 - [ ] Build NLP model to understand the voice commands "Describe" (Will add command for get directions to a place on google maps "Take to the closest Donut Shop")
 - [ ] Build Speech Synthesis model that can say things like "There is a table in the top-left view and a door in the center view" or "The Donut Shop is 6min away, go outside and we can start walking" or "You have reached your destination"
