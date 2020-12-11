@@ -36,8 +36,6 @@ def data_collection(mins):
 
 	start_time = time.time()	
 	
-	angle_halt = open("dataset/angle_halt.txt", "a")	
-
 	max_angle = 0
 	max_accel = 0
 	
@@ -55,20 +53,14 @@ def data_collection(mins):
 	
 		if time.time() - segment_start > 1:
 			count+=1
-			# Capture and save image
-			cam.save_image("dataset/images/"+str(count)+".jpg")
-
+			# Capture and save image and save the values of the angle and halt signal
 			halt = get_halt_signal(max_accel)
+			cam.save_image("dataset/images/"+str(count)+"_"+str(max_angle)+"_"+str(halt)+".jpg")
 			
-			# write the calculated values of the angle and the halt signal to the angle_halt.txt file	
-			angle_halt.write(str(max_angle)+" "+str(max_accel)+"\n")		
-
 			max_angle = 0
 			max_accel = 0
 
 			segment_start = time.time()	
-
-	angle_halt.close()
 
 	# Update the start.txt file with ID of lastest processed data sample
 	with open("dataset/last.txt", "w") as f:
