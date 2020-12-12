@@ -1,6 +1,6 @@
+import time
 from devices.mpu6050 import mpu6050
 from devices.picam import picam
-import time
 
 # MPU-6050 Gyroscope and Accelorometer
 mpu = mpu6050(0x68)
@@ -8,7 +8,7 @@ mpu = mpu6050(0x68)
 # Raspberry Pi Camera V2
 cam = None
 
-def initialize_devices(width=500, height=500):
+def initialize_devices(width=256, height=256):
 	# Initialize MPU-6050 device
 	global mpu
 	global cam
