@@ -1,4 +1,4 @@
-"""This program handles the communication over I2C
+"""
 between a Jetson Nano and a MPU-6050 Gyroscope / Accelerometer combo.
 Made by: Dennis/TW
 Released under the MIT License
@@ -70,10 +70,6 @@ class mpu6050:
     GYRO_CALI_X = 0
     GYRO_CALI_Y = 0
     GYRO_CALI_Z = 0
-
-    ANGLE_X = 0
-    ANGLE_Y = 0
-    ANGLE_Z = 0
 
     def __init__(self, address):
         self.address = address
@@ -246,13 +242,16 @@ class mpu6050:
         y = self.read_i2c_word(self.GYRO_YOUT0)
         z = self.read_i2c_word(self.GYRO_ZOUT0)
 
-        return {'x': x-self.GYRO_CALI_X, 'y': y-self.GYRO_CALI_Y, 'z': z-self.GYRO_CALI_Z}
+        return {
+            'x': x - self.GYRO_CALI_X,
+            'y': y - self.GYRO_CALI_Y,
+            'z': z - self.GYRO_CALI_Z}
 
-    def get_gyro_data(self):
+        def get_gyro_data(self):
         """Gets and returns the X, Y and Z values from the gyroscope.
 
         Returns the read values in a dictionary.
-        """
+		"""
         # Read the raw data from the MPU-6050
         x = self.read_i2c_word(self.GYRO_XOUT0)
         y = self.read_i2c_word(self.GYRO_YOUT0)
@@ -270,43 +269,48 @@ class mpu6050:
         elif gyro_range == self.GYRO_RANGE_2000DEG:
             gyro_scale_modifier = self.GYRO_SCALE_MODIFIER_2000DEG
         else:
-            print("Unkown range - gyro_scale_modifier set to self.GYRO_SCALE_MODIFIER_250DEG")
+            print(
+                "Unkown range - gyro_scale_modifier set to self.GYRO_SCALE_MODIFIER_250DEG")
             gyro_scale_modifier = self.GYRO_SCALE_MODIFIER_250DEG
 
-        x = x/gyro_scale_modifier
-        y = y/gyro_scale_modifier
-        z = z/gyro_scale_modifier
+        x = x / gyro_scale_modifier
+        y = y / gyro_scale_modifier
+        z = z / gyro_scale_modifier
 
-        return {'x': x-(self.GYRO_CALI_X/gyro_scale_modifier), 'y': y-(self.GYRO_CALI_Y/gyro_scale_modifier), 'z': z-(self.GYRO_CALI_Z/gyro_scale_modifier)}
- 
+        return {'x': x - (self.GYRO_CALI_X / gyro_scale_modifier),
+                'y': y - (self.GYRO_CALI_Y / gyro_scale_modifier),
+                'z': z - (self.GYRO_CALI_Z / gyro_scale_modifier)}
+
     def get_all_data(self):
         """Reads and returns all the available data."""
         temp = self.get_temp()
         accel = self.get_accel_data()
         gyro = self.get_gyro_data()
 
-    def calibrate_gyro(self, n):
-        print("Calibrating MPU6050 gyroscope...")
-        for i in range(n):
+        def calibrate_gyro(self, n):
+            for i in range(n):
+                data = self.get_gyro_data_raw()
+                self.GYRO_CALI_X += data["x"]
+                self.GYRO_CALI_Y += data["y"]
+                self.GYRO_CALI_Z += data["z"]
+
+            self.GYRO_CALI_X /= n
+            self.GYRO_CALI_Y /= n
+            self.GYRO_CALI_Z /= n
+
+        def accumulate_angle(self):
+            if not self.first_accum:
+                self.GYRO_TIME_START = time.time()
+                self.FIRST_ACCUM = False
+
             data = self.get_gyro_data_raw()
-            self.GYRO_CALI_X += data["x"]
-            self.GYRO_CALI_Y += data["y"]
-            self.GYRO_CALI_Z += data["z"]
+            self.ANGLE_X += data["x"]
+            self.ANGLE_Y += data["y"]
+            self.ANGLE_Z += data["z"]
 
-        self.GYRO_CALI_X /= n
-        self.GYRO_CALI_Y /= n
-        self.GYRO_CALI_Z /= n
-        print("Finished Calibrating!")
+        def get_roll_pitch_yaw(self):
 
-    def accumulate_angle(self):
-        data = self.get_gyro_data_raw()
-        self.ANGLE_X += data["x"]
-        self.ANGLE_Y += data["y"]
-        self.ANGLE_Z += data["z"]
-
-    def get_roll_pitch_yaw(self):
-
-        gyro_scale_modifier = None
+            gyro_scale_modifier = None
         gyro_range = self.read_gyro_range(True)
 
         if gyro_range == self.GYRO_RANGE_250DEG:
@@ -318,24 +322,20 @@ class mpu6050:
         elif gyro_range == self.GYRO_RANGE_2000DEG:
             gyro_scale_modifier = self.GYRO_SCALE_MODIFIER_2000DEG
         else:
-            print("Unkown range - gyro_scale_modifier set to self.GYRO_SCALE_MODIFIER_250DEG")
+            print(
+                "Unkown range - gyro_scale_modifier set to self.GYRO_SCALE_MODIFIER_250DEG")
             gyro_scale_modifier = self.GYRO_SCALE_MODIFIER_250DEG
 
-        out = {"x": self.ANGLE_X / gyro_scale_modifier, "y": self.ANGLE_Y / gyro_scale_modifier, "z": self.ANGLE_Z / gyro_scale_modifier}
+                out = {
+                    "x": self.ANGLE_X /
+                    gyro_scale_modifier,
+                    "y": self.ANGLE_Y /
+                    gyro_scale_modifier,
+                    "z": self.ANGLE_Z /
+                    gyro_scale_modifier}
 
-        self.ANGLE_X = 0
-        self.ANGLE_Y = 0
-        self.ANGLE_Z = 0
+                self.ANGLE_X = 0
+                self.ANGLE_Y = 0
+                self.ANGLE_Z = 0
 
-        return out
-
-mpu = mpu6050(0x68)
-mpu.calibrate_gyro(2000)
-
-start = time.time()
-while True:
-	mpu.accumulate_angle()
-	if time.time() - start > 1:
-		data = mpu.get_roll_pitch_yaw()
-		print("x:", data["x"], ",", "y:", data["y"], ",", "z:", data["z"])
-		start = time.time()
+                return out
