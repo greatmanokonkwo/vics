@@ -65,4 +65,4 @@ if __name__ == "__main__":
 
 	# Save trained model
 	torch.save(model.state_dict(), model_path)
-	
+
