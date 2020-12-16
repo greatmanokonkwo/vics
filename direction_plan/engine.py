@@ -28,10 +28,6 @@ left_buzzer = 37
 
 model = None
 
-# Global variables
-E = 2
-angle_reached = False
-
 def initialize(width=256, height=256):
 	global mpu, cam, motor1, motor2, model
 	
@@ -67,8 +63,8 @@ def guide_system_run():
 			GPIO.output(buzzer, 1)
 			
 			n = 1 if angle > 0 else -1
-			# If the displaced angle is within E of the predicted angle break the loop
-			while abs(angle) >= E:
+			# If the displaced angle is within 2 degrees of predicted angle
+			while abs(angle) >= 2:
 				disp_angle = mpu.get_angle_data["z"]
 				angle -= disp_angle 
 			
