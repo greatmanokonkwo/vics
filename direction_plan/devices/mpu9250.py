@@ -55,6 +55,16 @@ class MPU9250:
 	## Accel Full Scale Select 16G
 	AFS_16G  = 0x03
 
+	## Gyro error
+	GYRO_ERROR_X = 0
+	GYRO_ERROR_Y = 0
+	GYRO_ERROR_Z = 0
+	
+	## Accel error
+	ACCEL_ERROR_X = 0
+	ACCEL_ERROR_Y = 0
+	ACCEL_ERROR_Z = 0
+
 	# AK8963 Register Addresses
 	AK8963_ST1        = 0x02
 	AK8963_MAGNET_OUT = 0x03
@@ -86,6 +96,9 @@ class MPU9250:
 		self.address = address
 		self.configureMPU9250(self.GFS_250, self.AFS_2G)
 		self.configureAK8963(self.AK8963_MODE_C8HZ, self.AK8963_BIT_16)
+
+		self.caliMPU9250()
+		self.caliAK8963()
 	
 	def searchDevice(self):
 		who_am_i = self.bus.read_byte_data(self.address, self.WHO_AM_I)
@@ -98,7 +111,7 @@ class MPU9250:
 	#  @param [in] self The object pointer.
 	#  @param [in] gfs Gyro Full Scale Select(default:GFS_250[+250dps])
 	#  @param [in] afs Accel Full Scale Select(default:AFS_2G[2g])
-	def configureMPU9250(self, gfs, afs):
+	def configMPU9250(self, gfs, afs):
 		# Set gyroscope sensitivity
 		if gfs == self.GFS_250:
 			self.gres = 250.0/32768.0
@@ -197,7 +210,7 @@ class MPU9250:
 		y = round(y*self.ares, 3)
 		z = round(z*self.ares, 3)
 
-		return {"x":x, "y":y, "z":z}
+		return {"x":x-self.ACCEL_ERROR_X, "y":y-self.ACCEL_ERROR_Y, "z":z-self.ACCEL_ERROR_Z}
 
 	## Read gyro
 	#  @param [in] self The object pointer.
@@ -215,7 +228,7 @@ class MPU9250:
 		y = round(y*self.gres, 3)
 		z = round(z*self.gres, 3)
 
-		return {"x":x, "y":y, "z":z}
+		return {"x":x-self.GYRO_ERROR_X, "y":y-self.GYRO_ERROR_Y, "z":z-self.GYRO_ERROR_Z}
 
 	## Read magneto
 	#  @param [in] self The object pointer.
@@ -263,3 +276,39 @@ class MPU9250:
 		if(value & (1 << 16 - 1)):
 			value -= (1<<16)
 		return value
+
+	def caliMPU9250(self, n):
+		# Calculating average error over n samples
+		print("Calibrating MPU9250. Stand up straight and stay still...")
+
+		g_x = 0
+		g_y = 0
+		g_z = 0
+
+		a_x = 0
+		a_y = 0
+		a_z = 0
+
+		for i in range(n):
+			dataGyro = self.readGyro()
+			dataAccel = self.readAccel()
+						
+			g_x += dataGyro["x"]		
+			g_y += dataGyro["y"]		
+			g_z += dataGyro["z"]		
+			
+			a_x += dataAccel["x"]		
+			a_y += dataAccel["y"]		
+			a_z += dataAccel["z"]		
+			
+		self.GYRO_ERROR_X = g_x / n
+		self.GYRO_ERROR_Y = g_y / n
+		self.GYRO_ERROR_Z = g_z / n
+
+		self.ACCEL_ERROR_X = a_x / n
+		self.ACCEL_ERROR_Y = a_y / n
+		self.ACCEL_ERROR_Z = a_z / n
+		print("Finished calibrating")
+
+	def caliAK8963(self, n):
+			
