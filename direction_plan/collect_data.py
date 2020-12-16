@@ -1,6 +1,6 @@
+import time
 from devices.mpu6050 import mpu6050
 from devices.picam import picam
-import time
 
 # MPU-6050 Gyroscope and Accelorometer
 mpu = mpu6050(0x68)
@@ -8,14 +8,14 @@ mpu = mpu6050(0x68)
 # Raspberry Pi Camera V2
 cam = None
 
-def initialize_devices(width=500, height=500):
+def initialize_devices(width=256, height=256):
 	# Initialize MPU-6050 device
 	global mpu
 	global cam
 
 	mpu.set_accel_range(mpu.ACCEL_RANGE_2G)
 	mpu.set_gyro_range(mpu.GYRO_RANGE_2000DEG)
-	mpu.gyro_calibrate()
+	mpu.calibrate_gyro(2000)
 
 	cam = picam(width, height)
 
@@ -36,15 +36,13 @@ def data_collection(mins):
 
 	start_time = time.time()	
 	
-	angle_halt = open("dataset/angle_halt.txt", "a")	
-
 	max_angle = 0
 	max_accel = 0
 	
 	segment_start = time.time()
 	# Loop until specified minutes have elasped
 	while time.time() - start_time < mins*60:
-		angle = int(mpu.get_angle_data()['z'])
+		angle = int(mpu.get_roll_pitch_yaw()['z'])
 		accel = int(mpu.get_accel_data()['x'])
 		
 		if abs(angle) > abs(max_angle):
@@ -55,26 +53,20 @@ def data_collection(mins):
 	
 		if time.time() - segment_start > 1:
 			count+=1
-			# Capture and save image
-			cam.save_image("dataset/images/"+str(count)+".jpg")
-
+			# Capture and save image and save the values of the angle and halt signal
 			halt = get_halt_signal(max_accel)
+			cam.save_image("dataset/images/"+str(count)+"_"+str(max_angle)+"_"+str(halt)+".jpg")
 			
-			# write the calculated values of the angle and the halt signal to the angle_halt.txt file	
-			angle_halt.write(str(max_angle)+" "+str(max_accel)+"\n")		
-
 			max_angle = 0
 			max_accel = 0
 
 			segment_start = time.time()	
-
-	angle_halt.close()
 
 	# Update the start.txt file with ID of lastest processed data sample
 	with open("dataset/last.txt", "w") as f:
 		f.write(str(count))
 
 initialize_devices()
-time.sleep(30)
-data_collection(mins=2)
+#time.sleep(30)
+data_collection(mins=0.5)
 cam.cleanup()

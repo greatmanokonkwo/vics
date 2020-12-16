@@ -328,14 +328,3 @@ class mpu6050:
         self.ANGLE_Z = 0
 
         return out
-
-mpu = mpu6050(0x68)
-mpu.calibrate_gyro(2000)
-
-start = time.time()
-while True:
-	mpu.accumulate_angle()
-	if time.time() - start > 1:
-		data = mpu.get_roll_pitch_yaw()
-		print("x:", data["x"], ",", "y:", data["y"], ",", "z:", data["z"])
-		start = time.time()
