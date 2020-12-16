@@ -23,11 +23,13 @@ class picam:
 		)
 
 	def save_image(self, path):
+		cv2.imwrite(path, self.capture_image())
+
+	def capture_image(self):
 		if self.cam.isOpened():
 			ret_val, img = self.cam.read()
-			cv2.imwrite(path, img)
+			return img
 		else:
-			print("Unable to open amera")
-
+			print("Unable to open camera")
 	def cleanup(self):
 		self.cam.release()
