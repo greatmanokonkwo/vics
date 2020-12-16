@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-import torch
-from torchvision import transforms
-import GuideNET
-
-=======
 import os
 import datetime
 import torch
@@ -71,5 +65,3 @@ if __name__ == "__main__":
 
 	# Save trained model
 	torch.save(model.state_dict(), model_path)
-	
->>>>>>> 8f97b5e3445e9d04d8ebf9d77fd420118d62dda5

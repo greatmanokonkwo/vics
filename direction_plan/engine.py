@@ -8,15 +8,16 @@ Left and Right buzzer ON (4 secs) - Stop!
 """
 
 import time
+from PIL import Image
 import Jetson.GPIO as GPIO
-import os.getcwd
-import torch.load
-from torchvision import transforms.ToTensor
+import os
+import torch 
+from torchvision import transforms
 from devices.mpu9250 import mpu9250
 from devices.picam import picam
 
 # The MPU9250 sensor for calculating the displacement angle
-mpu9250 = mpu9250(0x68)
+#mpu9250 = mpu9250(0x68)
 
 # The Raspberry Pi Camera V2 for taking images 
 cam = None
@@ -27,12 +28,13 @@ left_buzzer = 37
 
 model = None
 
-# Constants
+# Global variables
 E = 2
+angle_reached = False
 
 def initialize(width=256, height=256):
 	global mpu, cam, motor1, motor2, model
-
+	
 	mpu.set_accel_range(mpu.ACCEL_RANGE_2G)
 	mpu.set_gyro_range(mpu.GYRO_RANGE_2000DEG)
 	
@@ -40,8 +42,8 @@ def initialize(width=256, height=256):
 	
 	# Setup buzzer GPIO to output
 	GPIO.setmode(GPIO.BOARD)
-	GPIO.setup(left_buzzer, GPIO.OUT)
-	GPIO.setup(right_buzzer, GPIO.OUT)
+	GPIO.setup(left_buzzer, GPIO.OUT, initial=0)
+	GPIO.setup(right_buzzer, GPIO.OUT, initial=0)
 
 	# Set inference model by loading the parameters where they have been saved
 	device = (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
@@ -53,26 +55,25 @@ def initialize(width=256, height=256):
 def guide_system_run():
 	while True:
 		# Run inference
-		img = cam.capture_image()
+		cam.save_image("captured.jpg")
 		tensor = transforms.ToTensor()
-		angle, halt = model(tensor(img))
-		
+		img = tensor(Image.open("capture.jpg"))
+		angle, halt = model(img)
+
 		# if halt signal is not inferred run direction signalling, else run halt signalling
 		if halt <= 0.5:
 			# Direction signal involves turning on the buzzer that corresponds to the direction that the user is supposed to go to and continously vibrating it until the user has moved to the right angle
-			if angle%2==0:
-				GPIO.output(right_buzzer, 1)	
-			else:
-				GPIO.output(left_buzzer, 1)	
-				
+			buzzer = right_buzzer if angle>0 else left_buzzer
+			GPIO.output(buzzer, 1)
+			
+			n = 1 if angle > 0 else -1
 			# If the displaced angle is within E of the predicted angle break the loop
 			while abs(angle) >= E:
 				disp_angle = mpu.get_angle_data["z"]
-				angle -= disp_angle
-	
-			GPIO.output(right_buzzer, 0)	
-			GPIO.output(left_buzzer, 0)
-
+				angle -= disp_angle 
+			
+			GPIO.output(buzzer, 0)	
+			
 		else:
 			# Stop signal for 3 seconds
 			start_time = time.time()
@@ -83,6 +84,8 @@ def guide_system_run():
 
 			GPIO.output(right_buzzer, 0)	
 			GPIO.output(left_buzzer, 0)
+	
+		time.sleep(1)
 
 if __name__ == "__main__":
 	initialize()

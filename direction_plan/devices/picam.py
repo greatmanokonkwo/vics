@@ -31,5 +31,6 @@ class picam:
 			return img
 		else:
 			print("Unable to open camera")
+
 	def cleanup(self):
 		self.cam.release()
