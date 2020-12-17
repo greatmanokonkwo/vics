@@ -8,16 +8,19 @@ Left and Right buzzer ON (4 secs) - Stop!
 """
 
 import time
+import smbus
 from PIL import Image
 import Jetson.GPIO as GPIO
 import os
 import torch 
 from torchvision import transforms
-from devices.mpu9250 import mpu9250
+from imusensor.MPU9250 import MPU9250
+from imusensor.filters import madgwick
 from devices.picam import picam
 
-# The MPU9250 sensor for calculating the displacement angle
-#mpu9250 = mpu9250(0x68)
+# IMU sensor
+sensorfusion = madgwick.Madgwick(0.5)
+imu = None
 
 # The Raspberry Pi Camera V2 for taking images 
 cam = None
@@ -29,12 +32,17 @@ left_buzzer = 37
 model = None
 
 def initialize(width=256, height=256):
-	global mpu, cam, motor1, motor2, model
+	global imu, cam, motor1, motor2, model
+
+	# Initialize and caliberate IMU sensor
+	address = 0x68
+	bus = smbus.SMBus(1)
+	imu = MPU9250.MPU9250(bus, address)
+	imu.begin()
 	
-	mpu.set_accel_range(mpu.ACCEL_RANGE_2G)
-	mpu.set_gyro_range(mpu.GYRO_RANGE_2000DEG)
-	
-	cam = picam(width, height)
+	imu.caliberateGyro()
+	imu.caliberateAccelerometer()
+	imu.caliberateMagPrecise()	
 	
 	# Setup buzzer GPIO to output
 	GPIO.setmode(GPIO.BOARD)
@@ -48,9 +56,22 @@ def initialize(width=256, height=256):
 	if os.path.exists():
 		model.load_state_dict(torch.load(model_path))
 
+def calculate_yaw():
+	currTime = time.time()
+	imu.readSensor()
+	for i in range(10):
+		newTime = time.time()
+		dt = newTime - currTime
+		currTime = newTime
+
+		sensorfusion.updateRollPitchYaw(imu.AccelVals[0], imu.AccelVals[1], imu.AccelVals[2], imu.GyroVals[0],
+									imu.GyroVals[1], imu.GyroVals[2], imu.MagVals[0], imu.MagVals[1], imu.MagVals[2], dt)
+	
+	return sensorfusion.yaw
+
 def guide_system_run():
 	while True:
-		# Run inference
+		# Collect image and run inference
 		cam.save_image("captured.jpg")
 		tensor = transforms.ToTensor()
 		img = tensor(Image.open("capture.jpg"))
@@ -62,17 +83,18 @@ def guide_system_run():
 			buzzer = right_buzzer if angle>0 else left_buzzer
 			GPIO.output(buzzer, 1)
 			
-			n = 1 if angle > 0 else -1
+			prev_yaw = 0
 			# If the displaced angle is within 2 degrees of predicted angle
 			while abs(angle) >= 2:
-				disp_angle = mpu.get_angle_data["z"]
-				angle -= disp_angle 
+				# Calculate the displaced angle of user using IMU sensor
+				yaw = calculate_yaw()
+				angle -= (yaw - prev_yaw) # subtract from the desired angle the change in angle of the user
+				prev_yaw = yaw
 			
 			GPIO.output(buzzer, 0)	
 			
 		else:
 			# Stop signal for 3 seconds
-			start_time = time.time()
 			GPIO.output(right_buzzer, 1)	
 			GPIO.output(left_buzzer, 1)
 

@@ -1,21 +1,32 @@
 import time
-from devices.mpu6050 import mpu6050
+import smbus
+
+from imusensor.MPU9250 import MPU9250
+from imusensor.filters import madgwick
+
 from devices.picam import picam
 
-# MPU-6050 Gyroscope and Accelorometer
-mpu = mpu6050(0x68)
+# MPU9250 IMU sensor and sensorfusion algorithm
+sensorfusion - madgwick.Madgwick(0.5)
+imu = None 
 
 # Raspberry Pi Camera V2
 cam = None
 
 def initialize_devices(width=256, height=256):
-	# Initialize MPU-6050 device
-	global mpu
+	global imu
 	global cam
 
-	mpu.set_accel_range(mpu.ACCEL_RANGE_2G)
-	mpu.set_gyro_range(mpu.GYRO_RANGE_2000DEG)
-	mpu.calibrate_gyro(2000)
+	# Initialize MPU-6050 device
+	address = 0x68
+	bus = smbus.SMBus(1)
+	imu = MPU9250.MPU9250(bus, address)
+	imu.begin()
+
+	# Calibrate IMU sensor
+	imu.caliberateGyro()
+	imu.caliberateAccelerometer()
+	imu.caliberateMagPrecise()
 
 	cam = picam(width, height)
 
@@ -36,37 +47,33 @@ def data_collection(mins):
 
 	start_time = time.time()	
 	
-	max_angle = 0
-	max_accel = 0
-	
-	segment_start = time.time()
+	count = 0	
+	prev_yaw = 0
 	# Loop until specified minutes have elasped
 	while time.time() - start_time < mins*60:
-		angle = int(mpu.get_roll_pitch_yaw()['z'])
-		accel = int(mpu.get_accel_data()['x'])
+		count+=1	
+		# Getting smooth readings from the IMU sensor
+		imu.readSensor()
+		for	i in range(10):
+			newTime = time.time()
+			dt = newTime - currTime
+			currTime = newTime
 		
-		if abs(angle) > abs(max_angle):
-			max_angle = angle
+			sensorfusion.updateRollPitchYaw(imu.AccelVals[0], imu.AccelVals[1], imu.AccelVals[2], imu.GyroVals[0],
+									imu.GyroVals[1], imu.GyroVals[2], imu.MagVals[0], imu.MagVals[1], imu.MagVals[2], dt)
 	
-		if abs(accel) > abs(max_accel):
-			max_accel = accel
-	
-		if time.time() - segment_start > 1:
-			count+=1
-			# Capture and save image and save the values of the angle and halt signal
-			halt = get_halt_signal(max_accel)
-			cam.save_image("dataset/images/"+str(count)+"_"+str(max_angle)+"_"+str(halt)+".jpg")
+		
+		# Capture and save image and save the values of the angle and halt signal
+		halt = get_halt_signal(imu.AccelVals[1])
+		cam.save_image("dataset/images/"+str(count)+"_"+str(sensorfusion.yaw - prev_yaw)+"_"+str(halt)+".jpg")
+		prev_yaw = sensorfusion.yaw
+		time.sleep(0.1)
 			
-			max_angle = 0
-			max_accel = 0
-
-			segment_start = time.time()	
-
 	# Update the start.txt file with ID of lastest processed data sample
 	with open("dataset/last.txt", "w") as f:
 		f.write(str(count))
 
 initialize_devices()
-#time.sleep(30)
-data_collection(mins=0.5)
+time.sleep(30)
+data_collection(mins=1)
 cam.cleanup()
