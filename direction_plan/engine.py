@@ -75,7 +75,7 @@ def guide_system_run():
 		cam.save_image("captured.jpg")
 		tensor = transforms.ToTensor()
 		img = tensor(Image.open("capture.jpg"))
-		angle, halt = model(img)
+		angle, halt = model(img.unsqueeze(0))[0]
 
 		# if halt signal is not inferred run direction signalling, else run halt signalling
 		if halt <= 0.5:
