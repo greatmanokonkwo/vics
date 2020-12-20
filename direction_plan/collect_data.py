@@ -1,5 +1,6 @@
 import time
 import smbus
+import math
 
 from imusensor.MPU9250 import MPU9250
 from imusensor.filters import madgwick
@@ -37,7 +38,7 @@ def get_halt_signal(accel):
 		return 1
 	else: 
 		return 0
-	
+
 # Data collection process	
 def data_collection(mins):
 	
@@ -65,7 +66,7 @@ def data_collection(mins):
 		
 		# Capture and save image and save the values of the angle and halt signal
 		halt = get_halt_signal(imu.AccelVals[1])
-		cam.save_image("dataset/images/"+str(count)+"_"+str(sensorfusion.yaw - prev_yaw)+"_"+str(halt)+".jpg")
+		cam.save_image("dataset/images/"+str(count)+"_"+str(math.radians(sensorfusion.yaw - prev_yaw))+"_"+str(halt)+".jpg")
 		prev_yaw = sensorfusion.yaw
 		time.sleep(0.1)
 			
