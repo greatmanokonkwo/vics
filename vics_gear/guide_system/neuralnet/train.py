@@ -4,7 +4,7 @@ import torch
 from torch import optim
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from motion_dataset import MotionDataset
+from dataset import MotionDataset
 from GuideNet import GuideNet
 	
 device = (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
@@ -17,7 +17,7 @@ GradNorm: Gradient Normalization for Adaptive Loss Balancing in Deep Multitask N
 	Zhao Chen, Vijay Badrinarayanan, Chen-Yu Lee, Andrew Rabinovich
 
 """
-def multi_loss(target_1, pred_1, target_2, pred_2):
+#def multi_loss(target_1, pred_1, target_2, pred_2):
 
 # training loop 
 def training_loop(n_epochs, optimizer, model, loss_fn, train_loader, val_loader):
@@ -65,14 +65,18 @@ if __name__ == "__main__":
 	n_epochs = int(input("Number of epochs: "))
 
 	# create dataset from the dataset/images directory with a format (img, angle, halt_signal)
-	data_path = os.path.dirname(os.getcwd()) + "/dataset/"
+	data_path = str(input("Please specify the location of the GuideNet dataset:"))
 	dataset = MotionDataset(data_path, transform=transforms.ToTensor())
 
 	# Dataloader to feed the training loop 
 	loader = DataLoader(dataset, batch_size=bs, shuffle=True)
 
+	for i, batch in enumerate(loader):
+		print (batch)	
+
 	# Split train and val sets
 
+	"""
 	# Load model	
 	model = GuideNet().to(device=device)
 	model_path = os.getcwd() + "/guide_net.pt"
@@ -93,3 +97,4 @@ if __name__ == "__main__":
 
 	# Save trained model
 	torch.save(model.state_dict(), model_path)
+	"""

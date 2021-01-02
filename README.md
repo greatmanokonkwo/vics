@@ -38,35 +38,16 @@ VICS is an end-to-end learning based visual impairment device that strives that 
 
 - [ ] Interface with microphone hardware
 - [ ] Interface with speaker hardware
-- [ ] Build object detection model as well as object location algorithm
+- [ ] Write object detection model 
 - [ ] Build WakeWord model for AI voice assistant (wake word: "Hey VICS")
-- [ ] Build Speech Recognition model to turn audio to text
-- [ ] Build NLP model to understand the voice commands "Describe" (Will add command for get directions to a place on google maps "Take to the closest Donut Shop")
-- [ ] Build Speech Synthesis model that can say things like "There is a table in the top-left view and a door in the center view" or "The Donut Shop is 6min away, go outside and we can start walking" or "You have reached your destination"
+- [ ] Build NLP model for taking in audio input and 
+- [ ] Using the detected objects find way to create voice responses with the detected objects
 - [ ] Write data collection scripts
 
 #### Hardware
 
 - [ ] Electret Microphone Amplifier - MAX4466
 - [ ] Bone Conductor Transducer
-
-### 3. GPS Guidance System
-
-#### Software
-
-- [ ] Interface with GPS receiver
-- [ ] Gain access to google directions API
-- [ ] Interface with Directions API
-- [ ] Write Destination vector and obstacle vector fusion algorithm (We need to get the user to the destination while also avoiding obstacles. Desired Vector - Target Vector)
-- [ ] Wireless connection module 
-- [ ] Directions should be downloaded prior to starting the journey, because Internet connection will be lost!
-- [ ] GPS Tracking with GPS receiver
-- [ ] GPS Guidance engine with Direction Planning System
-
-#### Hardware
-
-- [ ] GPS Receiver
-- [ ] Wi-Fi Module
 
 ### Product Design
 

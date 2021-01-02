@@ -18,59 +18,57 @@ from imusensor.MPU9250 import MPU9250
 from imusensor.filters import madgwick
 from devices.picam import picam
 
-# IMU sensor
-sensorfusion = madgwick.Madgwick(0.5)
-imu = None
+class GuideSystem:
+	# IMU sensor
+	sensorfusion = madgwick.Madgwick(0.5)
+	imu = None
 
-# The Raspberry Pi Camera V2 for taking images 
-cam = None
+	# The Raspberry Pi Camera V2 for taking images 
+	cam = None
 
-# GPIO pins for the two information relay vibration motors
-right_buzzer = 7
-left_buzzer = 37
+	# GPIO pins for the two information relay vibration motors
+	right_buzzer = 7
+	left_buzzer = 37
 
-model = None
+	model = None
 
-def initialize(width=256, height=256):
-	global imu, cam, motor1, motor2, model
-
-	# Initialize and caliberate IMU sensor
-	address = 0x68
-	bus = smbus.SMBus(1)
-	imu = MPU9250.MPU9250(bus, address)
-	imu.begin()
+	def __init__(self):
+		# Initialize and caliberate IMU sensor
+		address = 0x68
+		bus = smbus.SMBus(1)
+		self.imu = MPU9250.MPU9250(bus, address)
+		self.imu.begin()
 	
-	imu.caliberateGyro()
-	imu.caliberateAccelerometer()
-	imu.caliberateMagPrecise()	
+		self.imu.caliberateGyro()
+		self.imu.caliberateAccelerometer()
+		self.imu.caliberateMagPrecise()	
 	
-	# Setup buzzer GPIO to output
-	GPIO.setmode(GPIO.BOARD)
-	GPIO.setup(left_buzzer, GPIO.OUT, initial=0)
-	GPIO.setup(right_buzzer, GPIO.OUT, initial=0)
+		# Setup buzzer GPIO to output
+		GPIO.setmode(GPIO.BOARD)
+		GPIO.setup(self.left_buzzer, GPIO.OUT, initial=0)
+		GPIO.setup(self.right_buzzer, GPIO.OUT, initial=0)
 
-	# Set inference model by loading the parameters where they have been saved
-	device = (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
-	model = GuideNet().to(device=device) 
-	model_path = os.getcwd() + "/neuralnet/guide_net.pt"
-	if os.path.exists():
-		model.load_state_dict(torch.load(model_path))
+		# Set inference model by loading the parameters where they have been saved
+		device = (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
+		self.model = GuideNet().to(device=device) 
+		model_path = os.getcwd() + "/neuralnet/guide_net.pt"
+		if os.path.exists():
+			self.model.load_state_dict(torch.load(model_path))
 
-def calculate_yaw():
-	currTime = time.time()
-	imu.readSensor()
-	for i in range(10):
-		newTime = time.time()
-		dt = newTime - currTime
-		currTime = newTime
+	def _calculate_yaw_():
+		currTime = time.time()
+		imu.readSensor()
+		for i in range(10):
+			newTime = time.time()
+			dt = newTime - currTime
+			currTime = newTime
 
-		sensorfusion.updateRollPitchYaw(imu.AccelVals[0], imu.AccelVals[1], imu.AccelVals[2], imu.GyroVals[0],
+			sensorfusion.updateRollPitchYaw(imu.AccelVals[0], imu.AccelVals[1], imu.AccelVals[2], imu.GyroVals[0],
 									imu.GyroVals[1], imu.GyroVals[2], imu.MagVals[0], imu.MagVals[1], imu.MagVals[2], dt)
 	
-	return sensorfusion.yaw
+		return sensorfusion.yaw
 
-def guide_system_run():
-	while True:
+	def run():
 		# Collect image and run inference
 		cam.save_image("captured.jpg")
 		tensor = transforms.ToTensor()
@@ -87,7 +85,7 @@ def guide_system_run():
 			# If the displaced angle is within 2 degrees of predicted angle
 			while abs(angle) >= 2:
 				# Calculate the displaced angle of user using IMU sensor
-				yaw = calculate_yaw()
+				yaw = _calculate_yaw_()
 				angle -= (yaw - prev_yaw) # subtract from the desired angle the change in angle of the user
 				prev_yaw = yaw
 			
@@ -106,5 +104,6 @@ def guide_system_run():
 		time.sleep(1)
 
 if __name__ == "__main__":
-	initialize()
-	guide_system_run()
+	system = GuideSystem()
+ 	while True:
+		system.run()

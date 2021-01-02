@@ -35,15 +35,15 @@ def get_halt_signal(accel):
 	# The halt signal will be ON if a large negative value in the x-direction is calculated
 
 	if abs(accel) > 10 and accel%2!=0:
-		return 1
+		return "halt"
 	else: 
-		return 0
+		return "no_halt"
 
 # Data collection process	
-def data_collection(mins):
+def data_collection(mins, path):
 	
 	# Get the ID of the last processed data sample
-	with open("dataset/last.txt") as f:
+	with open(path+"/last.txt") as f:
 		count = int(f.read())
 
 	start_time = time.time()	
@@ -66,15 +66,17 @@ def data_collection(mins):
 		
 		# Capture and save image and save the values of the angle and halt signal
 		halt = get_halt_signal(imu.AccelVals[1])
-		cam.save_image("dataset/images/"+str(count)+"_"+str(math.radians(sensorfusion.yaw - prev_yaw))+"_"+str(halt)+".jpg")
+		angle = (math.radians(sensorfusion.yaw - prev_yaw))
+		cam.save_image(path+"/"+str(halt_path)+"/"+str(count)+"_"+str(angle)+".jpg")
 		prev_yaw = sensorfusion.yaw
 		time.sleep(0.1)
 			
 	# Update the start.txt file with ID of lastest processed data sample
-	with open("dataset/last.txt", "w") as f:
+	with open(path+"/last.txt", "w") as f:
 		f.write(str(count))
 
+data_path = str(input("Where should the dataset be stored (The path should contain a last.txt file and an images directory):"))
 initialize_devices()
 time.sleep(30)
-data_collection(mins=1)
+data_collection(mins=1, path=data_path)
 cam.cleanup()
