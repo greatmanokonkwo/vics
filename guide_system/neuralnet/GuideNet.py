@@ -13,7 +13,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class GuideNet(nn.Module):
-
 	def __init__(self, dropout_ratio=0.25):
 		super().__init__()
 		self.conv1 = nn.Conv2d(3, 16, kernel_size=3, padding=1)
