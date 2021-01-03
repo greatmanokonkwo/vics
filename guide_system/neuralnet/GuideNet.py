@@ -1,5 +1,11 @@
 """
-This is an implementation of the AlexNet convolutional neural network. 
+This is an implementation of the AlexNet convolutional neural network: 
+
+ImageNet Classification with Deep Convolutional Neural Networks
+	Alex Krizhevsky, Ilya Sutskever, Geoffrey E. Hinton
+University of Toronto
+
+that is revised to work for the GuideNet tasks of movement angle prediction and halt signalling
 It was 2 output neurons, the halt signal and the angular displacement in time
 """
 import torch
@@ -20,14 +26,18 @@ class GuideNet(nn.Module):
 		self.dropout = nn.Dropout(dropout_ratio)
 		
 	def forward(self, x):
-		out = F.max_pool2d(F.ReLU(self.conv1(x)))
-		out = F.max_pool2d(F.ReLU(self.conv2(out)))
-		out = F.max_pool2d(F.ReLU(self.conv3(out)))
-		out = out.view(-1, 8*32*32)
+		out = F.max_pool2d(F.relu(self.conv1(x)), 2)
+		out = F.max_pool2d(F.relu(self.conv2(out)), 2)
+		out = F.max_pool2d(F.relu(self.conv3(out)), 2)
+		out = out.view(-1, 4*32*32)
 		out = self.dropout(out)
 		out = torch.tanh(self.fc1(out))
 		out = self.dropout(out)
 		out = torch.tanh(self.fc2(out))
 		out = self.dropout(out)
 		out = self.fc3(out)
+		
+		with torch.no_grad():
+			torch.sigmoid_(out[:,1])
+
 		return out

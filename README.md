@@ -20,18 +20,17 @@ VICS is an end-to-end learning based visual impairment device that strives that 
 - [x] Implement AlexNet architecture for Direction Planning (direction_plan/neuralnet/model.py) 
 - [x] Write training process for the Direction Planning System (direction_plan/neuralnet/train.py)
 - [x] Interface vibration motor for halt signalling (direction_plan/devices/vibrator_motor.py)
-- [ ] Finish up mpu6050 code to enable calculation of Yaw angle (direction_plan/devices/mpu6050.py)
+- [x] Finish up mpu6050 code to enable calculation of Yaw angle (direction_plan/devices/mpu6050.py)
 - [ ] Figure out halt signal calculations (direction_plan/collect_data.py)
 - [x] Build direction_plan interfacing engine (direction_plan/engine.py)
 - [ ] Collect data (data such as stopping at cross walks and roads be very helpful)
 
 #### Hardware
 
-- [x] MPU-6050 6-axis accelorometer and gyroscope
+- [x] MPU9250 9-axis IMU sensor
 - [x] Raspberry Pi Camera
 - [x] 2x Vibration motors
 - [ ] Get and setup Macro/Wide lens for Pi Camera
-- [ ] Consider switching to a 9-axis sensor with acceloremeter, gyroscope and magnometer (MPU9250)
 
 ### 2. Speech and Communications System (Voice Assistant and Scene Description)
 
@@ -39,35 +38,16 @@ VICS is an end-to-end learning based visual impairment device that strives that 
 
 - [ ] Interface with microphone hardware
 - [ ] Interface with speaker hardware
-- [ ] Build object detection model as well as object location algorithm
+- [ ] Write object detection model 
 - [ ] Build WakeWord model for AI voice assistant (wake word: "Hey VICS")
-- [ ] Build Speech Recognition model to turn audio to text
-- [ ] Build NLP model to understand the voice commands "Describe" (Will add command for get directions to a place on google maps "Take to the closest Donut Shop")
-- [ ] Build Speech Synthesis model that can say things like "There is a table in the top-left view and a door in the center view" or "The Donut Shop is 6min away, go outside and we can start walking" or "You have reached your destination"
+- [ ] Build NLP model for taking in audio input and 
+- [ ] Using the detected objects find way to create voice responses with the detected objects
 - [ ] Write data collection scripts
 
 #### Hardware
 
 - [ ] Electret Microphone Amplifier - MAX4466
 - [ ] Bone Conductor Transducer
-
-### 3. GPS Guidance System
-
-#### Software
-
-- [ ] Interface with GPS receiver
-- [ ] Gain access to google directions API
-- [ ] Interface with Directions API
-- [ ] Write Destination vector and obstacle vector fusion algorithm (We need to get the user to the destination while also avoiding obstacles. Desired Vector - Target Vector)
-- [ ] Wireless connection module 
-- [ ] Directions should be downloaded prior to starting the journey, because Internet connection will be lost!
-- [ ] GPS Tracking with GPS receiver
-- [ ] GPS Guidance engine with Direction Planning System
-
-#### Hardware
-
-- [ ] GPS Receiver
-- [ ] Wi-Fi Module
 
 ### Product Design
 
