@@ -60,6 +60,7 @@ def data_collection(mins, path):
 	start_time = time.time()	
 
 	count = 0	
+	prev_yaw = 0
 	# Loop until specified minutes have elasped
 	while time.time() - start_time < mins*60:
 		count+=1	
@@ -75,33 +76,20 @@ def data_collection(mins, path):
 
 			sensorfusion.updateRollPitchYaw(accel[0], accel[1], accel[2], gyro[0], gyro[1], gyro[2], mag[0], mag[1], mag[2], dt)
 	
-		halt = get_halt_signal(accel[0])	
 		# Capture and save image and save the values of the angle and halt signal
-<<<<<<< HEAD:direction_plan/collect_data.py
-		print(sensorfusion.roll, sensorfusion.pitch, sensorfusion.yaw)
-		cam.save_image("dataset/images/"+str(count)+"_"+str(sensorfusion.yaw)+"_"+str(halt)+".jpg")
-=======
 		halt = get_halt_signal(imu.AccelVals[1])
-		angle = (math.radians(sensorfusion.yaw - prev_yaw))
+		angle = sensorfusion.yaw - prev_yaw
 		cam.save_image(path+"/"+str(halt_path)+"/"+str(count)+"_"+str(angle)+".jpg")
 		prev_yaw = sensorfusion.yaw
->>>>>>> cea3c3dd82fa934e57bf6eb829c8d158884a9e7b:guide_system/collect_data.py
 		time.sleep(0.1)
 			
 	# Update the start.txt file with ID of lastest processed data sample
 	with open(path+"/last.txt", "w") as f:
 		f.write(str(count))
 
-<<<<<<< HEAD:direction_plan/collect_data.py
 if __name__=="__main__":
+	data_path = str(input("Where should the dataset be stored (The path should contain a last.txt file and an images directory):"))
 	initialize_devices()
 	time.sleep(30)
-	data_collection(mins=2)
+	data_collection(mins=1, path=data_path)
 	cam.cleanup()
-=======
-data_path = str(input("Where should the dataset be stored (The path should contain a last.txt file and an images directory):"))
-initialize_devices()
-time.sleep(30)
-data_collection(mins=1, path=data_path)
-cam.cleanup()
->>>>>>> cea3c3dd82fa934e57bf6eb829c8d158884a9e7b:guide_system/collect_data.py

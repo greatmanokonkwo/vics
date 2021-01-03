@@ -3,7 +3,8 @@
  
 **Powered by Nvidia**
 
-VICS is an end-to-end learning based visual impairment device that strives that make the world more accessible to people who are visually impaired. VICS is currently made up of three separate systems that work to bring the world to the user via a suite of information rallying devices including vibration motors and speech enabled assistance.
+VICS is an end-to-end learning based visual impairment device that strives to make the world more accessible to the visually impaired. VICS is currently made up of three separate systems that work to bring the world to the user via a suite of information rallying devices including vibration motors and speech enabled assistance.
+
 
 ```pip3 install --user --upgrade -r requirements.txt```
 
@@ -61,3 +62,20 @@ VICS is an end-to-end learning based visual impairment device that strives that 
 
 - [ ] Create chest mount straps
 - [ ] 3d print Enclosure
+
+## Running on native machine
+
+### pip packages
+```
+pip3 install --user --upgrade -r requirements.txt
+```
+
+### Google Cloud Text-to-Speech API key
+
+```
+sudo snap install google-cloud-sdk
+export PROJECT_ID=$(gcloud config get-value core/project)
+gcloud iam service-accounts create my-tts-sa --display-name "my tts service account"
+gcloud iam service-accounts keys create ~/key.json --iam-account my-tts-sa@${PROJECT_ID}.iam.gserviceaccount.com
+export GOOGLE_APPLICATION_CREDENTIALS=~/key.json
+```
