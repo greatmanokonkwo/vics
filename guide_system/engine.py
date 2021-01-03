@@ -5,7 +5,8 @@ Left buzzer ON (continous) - Turn left by required degrees
 Right buzzer ON (continous) - Turn right by the required degrees
 Left and Right buzzer ON (4 secs) - Stop!
 
-"""
+                                                                                                            
+~                                                  """
 
 import time
 import smbus
@@ -16,7 +17,7 @@ import torch
 from torchvision import transforms
 from imusensor.MPU9250 import MPU9250
 from imusensor.filters import madgwick
-from devices.picam import picam
+from vics.tools_and_devices.picam import picam
 
 class GuideSystem:
 	# IMU sensor
