@@ -9,10 +9,10 @@ class GoogleVoice:
 		self.client = texttospeech.TextToSpeechClient()
 	
 	def list_languages(self):
-		voices = client.list_voices().voices
-		languages = unique_langueages_from_voices(voices)
+		voices = client.list_voices().voices 
+		languages = unique_langueages_from_voices(voices) 
 	
-		print (f"Languages: {len(languages)}".center(60, "-"))
+		print (f"Languages: {len(languages)}".center(60, "-")) 
 		for i, language in enumerate(sorted(languages)):
 			print (f"{language:>10}", end="" if i % 5 < 4 else "\n")
 	
@@ -54,3 +54,8 @@ class GoogleVoice:
 		with open(filename, "wb") as out:
 			out.write(response.audio_content)
 			print(f'Audio content written to "{filename}"')
+
+if __name__=="__main__":
+	synthesizer = GoogleVoice()
+	synthesizer.list_languages()
+	synthesizer.list_voices("en")	

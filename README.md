@@ -5,6 +5,8 @@
 
 VICS is an end-to-end learning based visual impairment device that strives that make the world more accessible to people who are visually impaired. VICS is currently made up of three separate systems that work to bring the world to the user via a suite of information rallying devices including vibration motors and speech enabled assistance.
 
+```pip3 install --user --upgrade -r requirements.txt```
+
 ## TO-DO 
 **NOTE:** All tasks involving the GPS Guidance System should be held off until everything else has been completed. This is only an extension of the project.
 
@@ -32,7 +34,7 @@ VICS is an end-to-end learning based visual impairment device that strives that 
 - [x] 2x Vibration motors
 - [ ] Get and setup Macro/Wide lens for Pi Camera
 
-### 2. Speech and Communications System (Voice Assistant and Scene Description)
+### 2. Speech and Communications Systems (Voice Assistant and Scene Description)
 
 #### Sofware
 
@@ -40,7 +42,7 @@ VICS is an end-to-end learning based visual impairment device that strives that 
 - [ ] Interface with speaker hardware
 - [ ] Write object detection model 
 - [ ] Build WakeWord model for AI voice assistant (wake word: "Hey VICS")
-- [ ] Build NLP model for taking in audio input and 
+- [ ] Build NLP model for taking in audio input and return a classification for the command issued
 - [ ] Using the detected objects find way to create voice responses with the detected objects
 - [ ] Write data collection scripts
 
