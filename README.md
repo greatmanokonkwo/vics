@@ -20,7 +20,7 @@ VICS is an end-to-end learning based visual impairment device that strives that 
 - [x] Implement AlexNet architecture for Direction Planning (direction_plan/neuralnet/model.py) 
 - [x] Write training process for the Direction Planning System (direction_plan/neuralnet/train.py)
 - [x] Interface vibration motor for halt signalling (direction_plan/devices/vibrator_motor.py)
-- [x] Finish up mpu6050 code to enable calculation of Yaw angle (direction_plan/devices/mpu6050.py)
+- [ ] Finish up mpu6050 code to enable calculation of Yaw angle (direction_plan/devices/mpu6050.py)
 - [ ] Figure out halt signal calculations (direction_plan/collect_data.py)
 - [x] Build direction_plan interfacing engine (direction_plan/engine.py)
 - [ ] Collect data (data such as stopping at cross walks and roads be very helpful)
