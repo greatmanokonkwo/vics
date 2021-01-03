@@ -1,0 +1,8 @@
+Jetson.GPIO >= 2.0.12
+google-cloud-texttospeech >= 2.2.0
+gTTS >= 2.2.1
+Pillow >= 7.0.0
+requests >= 2.22.0
+smbus >= 1.1.post2
+torch >= 1.7.0
+torhcvision >= 0.8.1
