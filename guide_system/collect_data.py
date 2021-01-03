@@ -1,18 +1,12 @@
 import time
-<<<<<<< HEAD:direction_plan/collect_data.py
-from mpu9250_jmdev.registers import *
-from mpu9250_jmdev.mpu_9250 import MPU9250
-from imusensor.filters import madgwick
-from devices.picam import picam
-=======
 import smbus
 import math
 
-from imusensor.MPU9250 import MPU9250
+from mpu9250_jmdev.registers import *
+from mpu9250_jmdev.mpu_9250 import MPU9250
 from imusensor.filters import madgwick
 
 from vics.tools_and_devices.picam import picam
->>>>>>> cea3c3dd82fa934e57bf6eb829c8d158884a9e7b:guide_system/collect_data.py
 
 # MPU9250 IMU sensor and sensorfusion algorithm
 sensorfusion = madgwick.Madgwick(0.5)
