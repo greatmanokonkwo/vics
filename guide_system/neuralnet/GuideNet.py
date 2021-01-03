@@ -6,7 +6,18 @@ ImageNet Classification with Deep Convolutional Neural Networks
 University of Toronto
 
 that is revised to work for the GuideNet tasks of movement angle prediction and halt signalling
-It was 2 output neurons, the halt signal and the angular displacement in time
+It outputs a softmax classification over 10 classes, 9 of which are angles of direction while the last one is the halt signal
+
+Class 0 = -PI/2 rad
+Class 1 = -3PI/8 rad
+Class 2 = -PI/4 rad
+Class 3 = -PI/8 rad
+Class 4 = 0 rad
+Class 5 = PI/8 rad
+Class 6 = PI/4 rad
+Class 7 = 3PI/8 rad
+Class 8 = PI/2 rad
+Class 9 = Halt Signal
 """
 import torch
 import torch.nn as nn
@@ -20,7 +31,7 @@ class GuideNet(nn.Module):
 		self.conv3 = nn.Conv2d(8, 4, kernel_size=3, padding=1)
 		self.fc1 = nn.Linear(4*32*32, 1024) 
 		self.fc2 = nn.Linear(1024, 512)
-		self.fc3 = nn.Linear(512,2) 
+		self.fc3 = nn.Linear(512,10) 
 
 		# Define proportion or neurons to dropout
 		self.dropout = nn.Dropout(dropout_ratio)
@@ -37,7 +48,4 @@ class GuideNet(nn.Module):
 		out = self.dropout(out)
 		out = self.fc3(out)
 		
-		with torch.no_grad():
-			torch.sigmoid_(out[:,1])
-
 		return out

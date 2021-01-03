@@ -4,9 +4,7 @@ SIGNALS
 Left buzzer ON (continous) - Turn left by required degrees
 Right buzzer ON (continous) - Turn right by the required degrees
 Left and Right buzzer ON (4 secs) - Stop!
-
-                                                                                                            
-~                                                  """
+"""
 
 import time
 import smbus
@@ -33,6 +31,8 @@ class GuideSystem:
 
 	model = None
 
+	prev_yaw = 0
+
 	def __init__(self):
 		# Initialize and caliberate IMU sensor
 		address = 0x68
@@ -56,40 +56,37 @@ class GuideSystem:
 		if os.path.exists():
 			self.model.load_state_dict(torch.load(model_path))
 
-	def _calculate_yaw_():
-		currTime = time.time()
-		imu.readSensor()
-		for i in range(10):
-			newTime = time.time()
-			dt = newTime - currTime
-			currTime = newTime
+	# TODO: Implement method for calculating the yaw of the on-board MPU9250 sensors
+	def __calculate_yaw():
 
-			sensorfusion.updateRollPitchYaw(imu.AccelVals[0], imu.AccelVals[1], imu.AccelVals[2], imu.GyroVals[0],
-									imu.GyroVals[1], imu.GyroVals[2], imu.MagVals[0], imu.MagVals[1], imu.MagVals[2], dt)
-	
-		return sensorfusion.yaw
+	# The formula to calculate the range of the direction class is: (class*PI/8 - PI/2) +- PI/16
+	def get_direction_class_range(direct_class):
+		class_angle = direct_class*22.5 - 90
+		return (class_angle - 11.25, class_angle + 11.25)
 
 	def run():
 		# Collect image and run inference
 		cam.save_image("captured.jpg")
 		tensor = transforms.ToTensor()
 		img = tensor(Image.open("capture.jpg"))
-		angle, halt = model(img.unsqueeze(0))[0]
+		direct_class = model(img.unsqueeze(0))[0]
 
 		# if halt signal is not inferred run direction signalling, else run halt signalling
-		if halt <= 0.5:
+		if direct_class != 9:
+			# Get acceptable movement range for the specified direction class
+			lower, uppper = get_direction_class_range(direct_class)
+
 			# Direction signal involves turning on the buzzer that corresponds to the direction that the user is supposed to go to and continously vibrating it until the user has moved to the right angle
-			buzzer = right_buzzer if angle>0 else left_buzzer
+			buzzer = right_buzzer if direct_class>4 else left_buzzer
 			GPIO.output(buzzer, 1)
 			
-			prev_yaw = 0
-			# If the displaced angle is within 2 degrees of predicted angle
-			while abs(angle) >= 2:
-				# Calculate the displaced angle of user using IMU sensor
-				yaw = _calculate_yaw_()
-				angle -= (yaw - prev_yaw) # subtract from the desired angle the change in angle of the user
-				prev_yaw = yaw
+			yaw_angle = 0
 			
+			while !(yaw_angle > upper && yaw_angle <= lower):
+				# Calculate the displaced angle of user using IMU sensor
+				yaw_angle = __calculate_yaw() - self.prev_yaw
+			
+			self.prev_yaw = __calculate_yaw()
 			GPIO.output(buzzer, 0)	
 			
 		else:

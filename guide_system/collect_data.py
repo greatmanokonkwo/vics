@@ -4,7 +4,6 @@ import math
 
 from mpu9250_jmdev.registers import *
 from mpu9250_jmdev.mpu_9250 import MPU9250
-from imusensor.filters import madgwick
 
 from vics.tools_and_devices.picam import picam
 
@@ -36,14 +35,38 @@ def initialize_devices(width=256, height=256):
 	imu.calibrate()
 	imu.configure()
 
+# TODO: Implement yaw angle calculations
+def get_yaw_angle():
+
 def get_halt_signal(accel):
 	# The halt signal will be ON if a large negative value in the x-direction is calculated
-
 	if abs(accel) > 10 and accel%2!=0:
-		return "halt"
+		return 1
 	else: 
-		return "no_halt"
+		return 0
 
+# Classify a given angle in degrees as one of the 9 direction classes
+# [-PI/2, -3PI/8, -PI/4, -PI/8, 0, PI/8, PI/4, 3PI/8, PI/2]
+def get_direction_class(angle):
+	if angle > -78.75 && angle <= -101.25:
+		return 0
+	elif angle > -56.25 && angle <= -78.75:
+		return 1
+	elif angle > -33.75 && angle <= -56.25:
+		return 2
+	elif angle > -11.25 && angle <= -33.75:
+		return 3
+	elif angle > 11.25 && angle <= -11.25:
+		return 4
+	elif angle > 33.75 && angle <= 11.25:
+		return 5
+	elif angle > 56.25 && angle <= 33.75:
+		return 6
+	elif angle > 78.75 && angle <= 56.25:
+		return 7
+	elif angle >= 101.25 && angle <= 78.75:
+		return 8
+		
 # Data collection process	
 def data_collection(mins, path):
 	
@@ -55,26 +78,24 @@ def data_collection(mins, path):
 
 	count = 0	
 	prev_yaw = 0
+
 	# Loop until specified minutes have elasped
 	while time.time() - start_time < mins*60:
-		count+=1	
-		currTime = time.time()
-		for i in range(10):
-			newTime = time.time()
-			dt = newTime - currTime
-			currTime = newTime
-		
-			accel = imu.readAccelerometerMaster()
-			gyro = imu.readGyroscopeMaster()
-			mag = imu.readMagnetometerMaster()
-
-			sensorfusion.updateRollPitchYaw(accel[0], accel[1], accel[2], gyro[0], gyro[1], gyro[2], mag[0], mag[1], mag[2], dt)
-	
-		# Capture and save image and save the values of the angle and halt signal
+		# Calculate values for the displacement angle and halt signal
 		halt = get_halt_signal(imu.AccelVals[1])
-		angle = sensorfusion.yaw - prev_yaw
-		cam.save_image(path+"/"+str(halt_path)+"/"+str(count)+"_"+str(angle)+".jpg")
-		prev_yaw = sensorfusion.yaw
+		angle = get_yaw_angle()
+
+		# Determine the motion class of given the angle and halt signal
+		direct_class = None
+		if halt:
+			direct_class = 9
+		else:
+			direct_class = get_direction_class(angle - prev_angle)
+
+		# Save the image as well as the motion in format direct_class/id_angle.jpg
+		cam.save_image(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(angle - prev_angle)+".jpg")
+
+		prev_angle = angle
 		time.sleep(0.1)
 			
 	# Update the start.txt file with ID of lastest processed data sample

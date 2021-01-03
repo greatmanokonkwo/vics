@@ -17,8 +17,6 @@ GradNorm: Gradient Normalization for Adaptive Loss Balancing in Deep Multitask N
 	Zhao Chen, Vijay Badrinarayanan, Chen-Yu Lee, Andrew Rabinovich
 
 """
-#def multi_loss(target_1, pred_1, target_2, pred_2):
-
 # training loop 
 def training_loop(n_epochs, optimizer, model, loss_fn, train_loader, val_loader):
 	len_train = len(train_loader)	
@@ -76,7 +74,6 @@ if __name__ == "__main__":
 
 	# Split train and val sets
 
-	"""
 	# Load model	
 	model = GuideNet().to(device=device)
 	model_path = os.getcwd() + "/guide_net.pt"
@@ -86,15 +83,16 @@ if __name__ == "__main__":
 	
 	# Train model 
 	optimizer = optim.SGD(model.parameters(), lr=1e-2)
+	loss_fn = nn.CrossEntropyLoss()
 
 	training_loop(
 		n_epochs = 100,
 		optimizer = optimizer,
 		model = model,
-		loss_fn = multi_loss,
-		train_loader = train_loader
+		loss_fn = loss_fn,
+		train_loader = train_loader,
+		val_loader = val_loader	
 	)
 
 	# Save trained model
 	torch.save(model.state_dict(), model_path)
-	"""
