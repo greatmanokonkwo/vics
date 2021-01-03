@@ -4,7 +4,6 @@ The Google Text-to-Speech API is used for life-like voice synthesis
 from google.cloud import texttospeech
 
 class GoogleVoice:
-
 	def __init__(self):
 		self.client = texttospeech.TextToSpeechClient()
 	
