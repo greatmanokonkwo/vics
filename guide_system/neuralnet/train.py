@@ -79,11 +79,6 @@ if __name__ == "__main__":
 	train_loader = DataLoader(dataset[train_indices], batch_size=bs, shuffle=True)
 	val_loader = DataLoader(dataset[val_indices], batch_size=bs, shuffle=True)
 
-	for i, batch in enumerate(val_loader):
-		print (batch)	
-
-	# Split train and val sets
-
 	# Load model	
 	model = GuideNet().to(device=device)
 	model_path = os.getcwd() + "/guide_net.pt"
@@ -106,4 +101,3 @@ if __name__ == "__main__":
 
 	# Save trained model
 	torch.save(model.state_dict(), model_path)
-	"""
