@@ -62,9 +62,14 @@ VICS is an end-to-end learning based visual impairment device that strives to ma
 
 ## Running on native machine
 
-### pip packages
+### pip install packages
 ```
 pip3 install --user --upgrade -r requirements.txt
+```
+
+### conda install packages
+```
+conda install --file requirements.txt
 ```
 
 ### Google Cloud Text-to-Speech API key
