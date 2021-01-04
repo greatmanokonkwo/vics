@@ -66,8 +66,21 @@ if __name__ == "__main__":
 	data_path = str(input("Please specify the location of the GuideNet dataset:"))
 	dataset = MotionDataset(data_path, transform=transforms.ToTensor())
 
+	# Split the dataset
+	n_samples = len(dataset)
+	n_val = int(0.2 * n_samples)
+	
+	shuffled_indices = torch.randperm(n_samples)
+	
+	train_indices = shuffled_indices[:-n_val]
+	val_indices = shuffled_indices[-n_val:]
+	
+	print(dataset[val_indices])
+		
+	"""
 	# Dataloader to feed the training loop 
-	loader = DataLoader(dataset, batch_size=bs, shuffle=True)
+	train_loader = DataLoader(dataset[train_indices], batch_size=bs, shuffle=True)
+	val_loader = DataLoader(val_dataset[val_indices], batch_size=bs, shuffle=True)
 
 	for i, batch in enumerate(loader):
 		print (batch)	
@@ -96,3 +109,4 @@ if __name__ == "__main__":
 
 	# Save trained model
 	torch.save(model.state_dict(), model_path)
+	"""

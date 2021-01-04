@@ -7,6 +7,8 @@ from mpu9250_jmdev.mpu_9250 import MPU9250
 
 from vics.tools_and_devices.picam import picam
 
+import random
+
 # MPU9250 IMU sensor and sensorfusion algorithm
 sensorfusion = madgwick.Madgwick(0.5)
 imu = None 
@@ -37,6 +39,7 @@ def initialize_devices(width=256, height=256):
 
 # TODO: Implement yaw angle calculations
 def get_yaw_angle():
+	return random.randint(-90, 90)
 
 def get_halt_signal(accel):
 	# The halt signal will be ON if a large negative value in the x-direction is calculated
@@ -48,23 +51,23 @@ def get_halt_signal(accel):
 # Classify a given angle in degrees as one of the 9 direction classes
 # [-PI/2, -3PI/8, -PI/4, -PI/8, 0, PI/8, PI/4, 3PI/8, PI/2]
 def get_direction_class(angle):
-	if angle > -78.75 && angle <= -101.25:
+	if angle > -78.75 & angle <= -101.25:
 		return 0
-	elif angle > -56.25 && angle <= -78.75:
+	elif angle > -56.25 & angle <= -78.75:
 		return 1
-	elif angle > -33.75 && angle <= -56.25:
+	elif angle > -33.75 & angle <= -56.25:
 		return 2
-	elif angle > -11.25 && angle <= -33.75:
+	elif angle > -11.25 & angle <= -33.75:
 		return 3
-	elif angle > 11.25 && angle <= -11.25:
+	elif angle > 11.25 & angle <= -11.25:
 		return 4
-	elif angle > 33.75 && angle <= 11.25:
+	elif angle > 33.75 & angle <= 11.25:
 		return 5
-	elif angle > 56.25 && angle <= 33.75:
+	elif angle > 56.25 & angle <= 33.75:
 		return 6
-	elif angle > 78.75 && angle <= 56.25:
+	elif angle > 78.75 & angle <= 56.25:
 		return 7
-	elif angle >= 101.25 && angle <= 78.75:
+	elif angle >= 101.25 & angle <= 78.75:
 		return 8
 		
 # Data collection process	
@@ -106,5 +109,5 @@ if __name__=="__main__":
 	data_path = str(input("Where should the dataset be stored (The path should contain a last.txt file and an images directory):"))
 	initialize_devices()
 	time.sleep(30)
-	data_collection(mins=1, path=data_path)
+	data_collection(mins=0.5, path=data_path)
 	cam.cleanup()

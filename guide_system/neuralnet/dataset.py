@@ -17,7 +17,7 @@ class MotionDataset(Dataset):
 
 			else:
 				self.samples = [(transform(Image.open(self.DATA_PATH + "/"+str(i)+"/" + filename)), i) 
-							 	for filename in images])
+							 	for filename in images]
 
 
 	# Get length of data samples in images directory from stored length in file "last.txt"
