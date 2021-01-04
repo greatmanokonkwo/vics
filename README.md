@@ -30,7 +30,7 @@ VICS is an end-to-end learning based visual impairment device that strives to ma
 - [x] MPU9250 9-axis IMU sensor
 - [x] Raspberry Pi Camera
 - [x] 2x Vibration motors
-- [ ] Get and setup Macro/Wide lens for Pi Camera
+- [x] Get and setup Macro/Wide lens for Pi Camera
 
 ### 2. Speech and Communications Systems (Voice Assistant and Scene Description)
 
