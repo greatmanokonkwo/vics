@@ -59,6 +59,7 @@ def training_loop(n_epochs, optimizer, model, loss_fn, train_loader, val_loader)
 				datetime.datetime.now(), epoch, loss_train / len_train, loss_val / len_val))
 
 if __name__ == "__main__":
+	val_size = float(input("Validation set ratio (Ex: 0.2): "))
 	bs = int(input("Batch size: "))	
 	n_epochs = int(input("Number of epochs: "))
 
@@ -69,20 +70,16 @@ if __name__ == "__main__":
 	# Split the dataset
 	n_samples = len(dataset)
 	n_val = int(0.2 * n_samples)
-	
 	shuffled_indices = torch.randperm(n_samples)
 	
 	train_indices = shuffled_indices[:-n_val]
 	val_indices = shuffled_indices[-n_val:]
 	
-	print(dataset[val_indices])
-		
-	"""
 	# Dataloader to feed the training loop 
 	train_loader = DataLoader(dataset[train_indices], batch_size=bs, shuffle=True)
-	val_loader = DataLoader(val_dataset[val_indices], batch_size=bs, shuffle=True)
+	val_loader = DataLoader(dataset[val_indices], batch_size=bs, shuffle=True)
 
-	for i, batch in enumerate(loader):
+	for i, batch in enumerate(val_loader):
 		print (batch)	
 
 	# Split train and val sets
@@ -99,7 +96,7 @@ if __name__ == "__main__":
 	loss_fn = nn.CrossEntropyLoss()
 
 	training_loop(
-		n_epochs = 100,
+		n_epochs = n_epochs,
 		optimizer = optimizer,
 		model = model,
 		loss_fn = loss_fn,
