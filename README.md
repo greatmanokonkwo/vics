@@ -76,3 +76,12 @@ gcloud iam service-accounts create my-tts-sa --display-name "my tts service acco
 gcloud iam service-accounts keys create ~/key.json --iam-account my-tts-sa@${PROJECT_ID}.iam.gserviceaccount.com
 export GOOGLE_APPLICATION_CREDENTIALS=~/key.json
 ```
+
+## YOLOV3 weights file
+
+Download the weights file in ``vics/speech_and_comms/scene_describe_system/neuralnet``
+
+```
+wget https://pjreddie.com/media/files/yolov3.weights
+```
+
