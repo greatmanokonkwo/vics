@@ -34,3 +34,8 @@ class picam:
 
 	def cleanup(self):
 		self.cam.release()
+
+if __name__=="__main__":
+	cam = picam(width=416, height=416)
+	cam.save_image("test.jpg")
+	
