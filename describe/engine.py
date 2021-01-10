@@ -3,8 +3,8 @@ Processes the output of the YOLO objection detection algorithm to get a list of 
 The engine then uses a text-to-speech module to say what was in the captured scenery
 """
 import numpy as np
-from sensors_and_tools.picam import picam
-from sensors_and_tools.google_voice import GoogleVoice
+from devices.picam import picam
+from devices.google_voice import GoogleVoice
 from detector import ObjectDetector
 
 class SceneDescribeSystem:
