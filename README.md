@@ -7,6 +7,28 @@ VICS is an end-to-end learning based visual impairment device that strives to ma
 
 ## Running on native machine
 
+### Pytorch for Jetson nano
+
+*Instructions from https://forums.developer.nvidia.com/t/pytorch-for-jetson-version-1-7-0-now-available/72048*
+
+Install PyTorch pip wheel v1.7.0: https://nvidia.box.com/shared/static/cs3xn3td6sfgtene6jdvsxlr366m2dhq.whl
+
+```
+wget https://nvidia.box.com/shared/static/cs3xn3td6sfgtene6jdvsxlr366m2dhq.whl -O torch-1.7.0-cp36-cp36m-linux_aarch64.whl
+sudo apt-get install python3-pip libopenblas-base libopenmpi-dev 
+pip3 install Cython
+pip3 install numpy torch-1.7.0-cp36-cp36m-linux_aarch64.whl
+```
+Install torchvision
+```
+sudo apt-get install libjpeg-dev zlib1g-dev libpython3-dev libavcodec-dev libavformat-dev libswscale-dev
+git clone --branch <version> https://github.com/pytorch/vision torchvision   # see below for version of torchvision to download
+cd torchvision
+export BUILD_VERSION=0.8.1
+sudo python3 setup.py install    
+cd ../ 
+```
+
 ### pip install packages
 ```
 pip3 install --user --upgrade -r requirements.txt
