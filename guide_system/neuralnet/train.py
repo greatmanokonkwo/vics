@@ -4,6 +4,7 @@ import torch
 from torch import optim
 from torch.utils.data import DataLoader
 from torchvision import transforms
+import torch.nn as nn
 from dataset import MotionDataset
 from GuideNet import GuideNet
 	
@@ -27,13 +28,12 @@ def training_loop(n_epochs, optimizer, model, loss_fn, train_loader, val_loader)
 		loss_val = 0.0
 
 		# Calculate loss for the training set and backpropagate
-		for imgs, angles, halts in train_loader:
+		for imgs, classes in train_loader:
 			imgs = imgs.to(device=device)
-			angles = angles.to(device=device)
-			halts = halts.to(device=device)
+			classes = classes.to(device=device)
 				
 			outputs = model(imgs)
-			loss = loss_fn(angles, outputs[:,0], halts, outputs[:,1])	
+			loss = loss_fn(outputs, classes)	
 
 			optimizer.zero_grad()
 			loss.backward()
@@ -44,13 +44,12 @@ def training_loop(n_epochs, optimizer, model, loss_fn, train_loader, val_loader)
 		# Calculate validation losses for each epoch
 		with torch.no_grad():
 			loss_val = 0.0
-			for imgs, angles, halts in val_loader:
+			for imgs, classes in val_loader:
 				imgs = ims.to(device=device)
-				angles = angles.to(device=device)
-				halts = halts.to(device=device)
+				classes = classes.to(device=device)
 
 				preds = model(imgs)
-				loss = loss_fn(angles, preds[:,0], halts, preds[:,1])
+				loss = loss_fn(outputs, classes)	
 			
 				loss_val += loss.item()
 
@@ -79,11 +78,6 @@ if __name__ == "__main__":
 	train_loader = DataLoader(dataset[train_indices], batch_size=bs, shuffle=True)
 	val_loader = DataLoader(dataset[val_indices], batch_size=bs, shuffle=True)
 
-	for i, batch in enumerate(val_loader):
-		print (batch)	
-
-	# Split train and val sets
-
 	# Load model	
 	model = GuideNet().to(device=device)
 	model_path = os.getcwd() + "/guide_net.pt"
@@ -106,4 +100,3 @@ if __name__ == "__main__":
 
 	# Save trained model
 	torch.save(model.state_dict(), model_path)
-	"""

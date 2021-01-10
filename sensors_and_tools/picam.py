@@ -3,7 +3,7 @@ import cv2
 class picam:
 	cam = None
 	
-	def __init__(self, width=256, height=256):
+def __init__(self, width=256, height=256):
 		self.cam = cv2.VideoCapture(self.gstreamer_pipeline(width, height), cv2.CAP_GSTREAMER)
 	
 	def gstreamer_pipeline(self, capture_width, capture_height):

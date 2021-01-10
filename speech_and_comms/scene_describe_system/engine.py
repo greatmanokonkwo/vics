@@ -2,18 +2,24 @@
 Processes the output of the YOLO objection detection algorithm to get a list of object that were found in the image as well as their locations.
 The engine then uses a text-to-speech module to say what was in the captured scenery
 """
+from sensors_and_tools.picam import picam
+from sensors_and_tools.GoogleVoic
+from neuralnet.detect import ObjectDetector
 
 class SceneDescribeSystem:
 	# Raspbery Pi Cam
+	cam = picam()
 	
 	# Electret Microphone
 
 	# Speech to text module
+	
 
-	# YOLO model 
+	# object detector
+	
 
 	def __init__(self):
-
+	
 	# Takes information of a box and returns the box location (left, front, right)
 	def __get_object_location(self, x, y, w, h):
 
