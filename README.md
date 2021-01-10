@@ -11,7 +11,7 @@ VICS is an end-to-end learning based visual impairment device that strives to ma
 
 *Instructions from https://forums.developer.nvidia.com/t/pytorch-for-jetson-version-1-7-0-now-available/72048*
 
-Install PyTorch pip wheel v1.7.0: https://nvidia.box.com/shared/static/cs3xn3td6sfgtene6jdvsxlr366m2dhq.whl
+Install PyTorch pip wheel v1.7.0
 
 ```
 wget https://nvidia.box.com/shared/static/cs3xn3td6sfgtene6jdvsxlr366m2dhq.whl -O torch-1.7.0-cp36-cp36m-linux_aarch64.whl

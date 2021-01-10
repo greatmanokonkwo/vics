@@ -1,11 +1,11 @@
 import requests
 import Jetson.GPIO as GPIO
 
-from speech_and_comms.wakeword.engine import WakeWordProcessor
-from speech_and_comms.command_processor.engine import CommandProcessor
-from guide_system.engine import GuideSystem
-from speech_and_comms.scene_describe_system.engine import SceneDescribeSystem 
-from speech_and_comms.image_reading_system.engine import ImageReadingSystem
+from wakeword.engine import WakeWordProcessor
+from command_process.engine import CommandProcessor
+from guide.engine import GuideSystem
+from describe.engine import SceneDescribeSystem 
+from read.engine import ImageReadingSystem
 
 
 """

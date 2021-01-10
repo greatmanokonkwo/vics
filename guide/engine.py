@@ -15,7 +15,7 @@ import torch
 from torchvision import transforms
 from imusensor.MPU9250 import MPU9250
 from imusensor.filters import madgwick
-from vics.tools_and_devices.picam import picam
+from devices.picam import picam
 
 class GuideSystem:
 	# IMU sensor
