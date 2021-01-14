@@ -1,20 +1,23 @@
+# Add vics directory to sys path to have access to devices module
+import os,sys
+sys.path.append("..")
+
 import time
 import smbus
-import math
 
-from mpu9250_jmdev.registers import *
-from mpu9250_jmdev.mpu_9250 import MPU9250
+from imusensor.MPU9250 import MPU9250
+from imusensor.filters import kalman
 
-from vics.tools_and_devices.picam import picam
-
-import random
+from devices.picam import picam
 
 # MPU9250 IMU sensor and sensorfusion algorithm
-sensorfusion = madgwick.Madgwick(0.5)
+sensorfusion = kalman.Kalman()
 imu = None 
 
 # Raspberry Pi Camera V2
 cam = None
+
+initial_yaw = 0
 
 def initialize_devices(width=256, height=256):
 	global imu
@@ -23,23 +26,25 @@ def initialize_devices(width=256, height=256):
 	cam = picam(width, height)
 
 	# Initialize MPU-6050 device
-	imu = MPU9250(
-    	address_ak=AK8963_ADDRESS, 
-    	address_mpu_master=MPU9050_ADDRESS_68, # In 0x68 Address
-    	address_mpu_slave=None, 
-    	bus=1,
-    	gfs=GFS_1000, 
-    	afs=AFS_8G, 
-    	mfs=AK8963_BIT_16, 
-    	mode=AK8963_MODE_C100HZ)
+	address = 0x68
+	bus = smbus.SMBus(1)
+	imu = MPU9250
+	imu.begin()
+	
+	calib_file = "../devices/calib.json" # path of caliberation file with caliberated values
 
-	#Calibrate IMU sensor
-	imu.calibrate()
-	imu.configure()
+	if os.path.exists(calib_file):	
+		imu.loadCalibDataFromFile(calib_file)
 
-# TODO: Implement yaw angle calculations
-def get_yaw_angle():
-	return random.randint(-90, 90)
+	# Initialize sensor fusion algorithm roll, pitch and yaw values
+	imu.readSensor()
+	imu.computeOrientation()
+	
+	sensorfusion.roll = imu.roll
+	sensorfusion.pitch = imu.pitch
+	sensorfusion.yaw = imu.yaw
+
+	initial_yaw = imu.yaw
 
 def get_halt_signal(accel):
 	# The halt signal will be ON if a large negative value in the x-direction is calculated
@@ -72,7 +77,6 @@ def get_direction_class(angle):
 		
 # Data collection process	
 def data_collection(mins, path):
-	
 	# Get the ID of the last processed data sample
 	with open(path+"/last.txt") as f:
 		count = int(f.read())
@@ -80,26 +84,45 @@ def data_collection(mins, path):
 	start_time = time.time()	
 
 	count = 0	
-	prev_yaw = 0
+	currTime = time.time()
+
+	capture_timer = 0 # the below while loop has a frequency of 100 loops per second which is too many pictures to take a second we should should count every 100 loops and take a picture at those points
 
 	# Loop until specified minutes have elasped
 	while time.time() - start_time < mins*60:
+		capture_timer+=1
+
 		# Calculate values for the displacement angle and halt signal
 		halt = get_halt_signal(imu.AccelVals[1])
-		angle = get_yaw_angle()
+
+		# Calculate the change in the yaw angle of the mpu9250 device
+		imu.readSensor()
+		imu.computeOrientation()
+		newTime = time.time()
+		dt = newTime - currTime
+		currTime = newTime
+
+		sensorfusion.computeAndUpdateRollPitchYaw(imu.AccelVals[0], imu.AccelVals[1], imu.AccelVals[2], imu.GyroVals[0], imu.GyroVals[1], imu.GyroVals[2],     imu.MagVals[0], imu.MagVals[1], imu.MagVals[2], dt)
+
+
+		yaw_angle = sensorfusion.yaw - initial_yaw # The magnetometer measures heading from the earth's true north, we need to set the user's initial heading as the reference point
 
 		# Determine the motion class of given the angle and halt signal
 		direct_class = None
 		if halt:
 			direct_class = 9
 		else:
-			direct_class = get_direction_class(angle - prev_angle)
-
+			direct_class = get_direction_class(yaw_angle - prev_yaw)
+		
 		# Save the image as well as the motion in format direct_class/id_angle.jpg
-		cam.save_image(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(angle - prev_angle)+".jpg")
+		if capture_timer == 100:
+			cam.save_image(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(yaw_angle - prev_yaw)+".jpg")
+			capture_timer = 0
+			count+=1
 
-		prev_angle = angle
-		time.sleep(0.1)
+		prev_yaw = yaw_angle
+
+		time.sleep(0.01)
 			
 	# Update the start.txt file with ID of lastest processed data sample
 	with open(path+"/last.txt", "w") as f:
