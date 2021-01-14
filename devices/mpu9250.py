@@ -92,6 +92,14 @@ class MPU9250:
 	## smbus
 	bus = smbus.SMBus(1)		
 
+	# Calibration values
+	## Accelerometer
+		
+	## Gyroscope
+
+	## Magnetometer 
+	magnetCorrections = {'x':0, 'y':0, 'z':0}
+
 	def __init__(self, address=0x68):
 		self.address = address
 		self.configMPU9250(self.GFS_250, self.AFS_2G)
@@ -137,6 +145,14 @@ class MPU9250:
 		time.sleep(0.1)
 		# auto select clock source
 		self.bus.write_byte_data(self.address, self.PWR_MGMT_1, 0x01)
+		time.sleep(0.1)
+		# DLPF_CFG
+		self.bus.write_byte_data(self.address, self.CONFIG, 0x03)
+		# sample rate divider
+		self.bus.write_byte_data(self.address, self.SMPLRT_DIV, 0x04)
+		# gyro full scale select
+		self.bus.write_byte_data(self.address, self.GYRO_CONFIG, gfs << 3)
+		# accel full scale select
 		time.sleep(0.1)
 		# DLPF_CFG
 		self.bus.write_byte_data(self.address, self.CONFIG, 0x03)
@@ -266,6 +282,22 @@ class MPU9250:
 		temp = round((temp / 333.87 + 21.0), 3)
 		return temp
 
+	## Magnetometer Calibration
+	# @param [in] self The object pointer
+	# @retval None
+	def magnetCalibrate(self):
+		print ("Calculate magnetometer correction values to account for soft and hard iron distortions in environment")
+		for i in ['x','y','z']:
+			print (f"Revolve the device 360 degrees around the {i}-axis:")
+			print ("")
+			vals = []
+			start_time = time.time()
+			while time.time() - start_time < 20:
+				mag = self.readMagnet()
+				vals.append(mag[i])
+			self.magnetCorrections[i] = (max(vals)+min(vals))/2
+			print("Correction value:", self.magnetCorrections[i])
+
 	## Data Convert
 	# @param [in] self The object pointer.
 	# @param [in] data1 LSB
@@ -277,44 +309,17 @@ class MPU9250:
 			value -= (1<<16)
 		return value
 
-	def caliMPU9250(self, n):
-		# Calculating average error over n samples
-		print("Calibrating MPU9250. Stand up straight and stay still...")
-
-		g_x = 0
-		g_y = 0
-		g_z = 0
-
-		a_x = 0
-		a_y = 0
-		a_z = 0
-
-		for i in range(n):
-			dataGyro = self.readGyro()
-			dataAccel = self.readAccel()
-						
-			g_x += dataGyro["x"]		
-			g_y += dataGyro["y"]		
-			g_z += dataGyro["z"]		
-			
-			a_x += dataAccel["x"]		
-			a_y += dataAccel["y"]		
-			a_z += dataAccel["z"] - 9.8
-			
-		self.GYRO_ERROR_X = g_x / n
-		self.GYRO_ERROR_Y = g_y / n
-		self.GYRO_ERROR_Z = g_z / n
-
-		self.ACCEL_ERROR_X = a_x / n
-		self.ACCEL_ERROR_Y = a_y / n
-		self.ACCEL_ERROR_Z = a_z / n
-		print("Finished calibrating")
-
-			
 mpu = MPU9250()
-#mpu.caliMPU9250(2000)
+mpu.magnetCalibrate()
 
 while True:
 	accel = mpu.readAccel()
-	print ("x", round(accel['x']), "y", round(accel['y']), "z", round(accel['z']))	
+	gyro = mpu.readGyro()
+	mag = mpu.readMagnet()
+	
+	print ("Accelerometer:", "x", accel['x'], "y", accel['y'], "z", accel['z'])	
+	print ("Gyroscope:", "x", gyro['x'], "y", gyro['y'], "z", gyro['z'])	
+	print ("Magnetometer:", "x", mag['x'], "y", mag['y'], "z", mag['z'])	
+	print("")
+
 	time.sleep(1)

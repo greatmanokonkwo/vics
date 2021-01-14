@@ -1,6 +1,7 @@
 Jetson.GPIO >= 2.0.12
 google-cloud-texttospeech >= 2.2.0
 gTTS >= 2.2.1
+micropython-mpu9250 >= 0.3.0
 opencv-python >= 4.1.1
 Pillow >= 7.0.0
 requests >= 2.22.0
