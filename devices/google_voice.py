@@ -35,7 +35,7 @@ class GoogleVoice:
 			rate = voice.natural_sample_rate_hertz
 			print(f"{languages:<8} | {name:<24} | {gender:<8} | {rate:,} Hz")
 
-	def text_to_speech(self, text, path=None):	
+	def text_to_speech(self, text, name):	
 		language_code = "-".join(voice_name.split("-")[:2])
 		text_input = texttospeech.SynthesisInput(text=text)
 		voice_params = texttospeech.VoiceSelectionParams(
@@ -49,10 +49,10 @@ class GoogleVoice:
 			input=text_input, voice=voice_params, audio_config=audio_config
 		)
 
-		filename = f"{language_code}.wav"
+		filename = f"{name}.wav"
 		with open(filename, "wb") as out:
 			out.write(response.audio_content)
-			print(f'Audio content written to "{filename}"')
+			print(f'Audio content written to "{name}"')
 
 if __name__=="__main__":
 	synthesizer = GoogleVoice()
