@@ -1,6 +1,6 @@
 # Add vics directory to sys path to have access to devices module
-import os,sys
-sys.path.append("..")
+import os
+os.sys.path.append("..")
 
 import time
 import smbus
@@ -28,7 +28,7 @@ def initialize_devices(width=256, height=256):
 	# Initialize MPU-6050 device
 	address = 0x68
 	bus = smbus.SMBus(1)
-	imu = MPU9250
+	imu = MPU9250.MPU9250(bus, address)
 	imu.begin()
 	
 	calib_file = "../devices/calib.json" # path of caliberation file with caliberated values
@@ -56,23 +56,23 @@ def get_halt_signal(accel):
 # Classify a given angle in degrees as one of the 9 direction classes
 # [-PI/2, -3PI/8, -PI/4, -PI/8, 0, PI/8, PI/4, 3PI/8, PI/2]
 def get_direction_class(angle):
-	if angle > -78.75 & angle <= -101.25:
+	if (angle < -78.75) & (angle >= -101.25):
 		return 0
-	elif angle > -56.25 & angle <= -78.75:
+	elif (angle < -56.25) & (angle >= -78.75):
 		return 1
-	elif angle > -33.75 & angle <= -56.25:
+	elif (angle < -33.75) & (angle >= -56.25):
 		return 2
-	elif angle > -11.25 & angle <= -33.75:
+	elif (angle < -11.25) & (angle >= -33.75):
 		return 3
-	elif angle > 11.25 & angle <= -11.25:
+	elif (angle < 11.25) & (angle >= -11.25):
 		return 4
-	elif angle > 33.75 & angle <= 11.25:
+	elif (angle < 33.75) & (angle >= 11.25):
 		return 5
-	elif angle > 56.25 & angle <= 33.75:
+	elif (angle < 56.25) & (angle >= 33.75):
 		return 6
-	elif angle > 78.75 & angle <= 56.25:
+	elif (angle < 78.75) & (angle >= 56.25):
 		return 7
-	elif angle >= 101.25 & angle <= 78.75:
+	elif (angle <= 101.25) & (angle >= 78.75):
 		return 8
 		
 # Data collection process	
@@ -85,9 +85,8 @@ def data_collection(mins, path):
 
 	currTime = START_TIME
 
-	count = 0	
 	capture_timer = 0 # the below while loop has a frequency of 100 loops per second which is too many pictures to take a second we should should count every 100 loops and take a picture at those points
-
+	prev_yaw = 0
 	# Loop until specified minutes have elasped
 	while time.time() - START_TIME < mins*60:
 		capture_timer+=1
@@ -109,14 +108,15 @@ def data_collection(mins, path):
 
 		# Determine the motion class of given the angle and halt signal
 		direct_class = None
+		angle = int(yaw_angle - prev_yaw)
 		if halt:
 			direct_class = 9
 		else:
-			direct_class = get_direction_class(yaw_angle - prev_yaw)
+			direct_class = get_direction_class(float(angle))
 		
 		# Save the image as well as the motion in format direct_class/id_angle.jpg
 		if capture_timer == 100:
-			cam.save_image(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(yaw_angle - prev_yaw)+".jpg")
+			cam.save_image(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(angle)+".jpg")
 			capture_timer = 0
 			count+=1
 
@@ -131,6 +131,7 @@ def data_collection(mins, path):
 if __name__=="__main__":
 	data_path = str(input("Where should the dataset be stored (The path should contain a last.txt file and an images directory):"))
 	initialize_devices()
-	time.sleep(30)
-	data_collection(mins=0.5, path=data_path)
+	print ("Get set up. Data collection will start in 30 seconds.")
+	time.sleep(0)
+	data_collection(mins=3, path=data_path)
 	cam.cleanup()
