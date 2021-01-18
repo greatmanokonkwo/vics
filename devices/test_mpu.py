@@ -68,5 +68,8 @@ while True:
 	
 	if time_cnt == 100:
 		time_cnt = 0	
-		print ("roll: {0} ; pitch : {1} ; yaw : {2}".format(sensorfusion.roll, sensorfusion.pitch, sensorfusion.yaw))
+		print(f"Accelorometer: {imu.AccelVals[0]} {imu.AccelVals[1]} {imu.AccelVals[2]}")
+		print(f"Gyroscope: {imu.GyroVals[0]} {imu.GyroVals[1]} {imu.GyroVals[2]}")
+		print(f"Magnetometer: {imu.MagVals[0]} {imu.MagVals[1]} {imu.MagVals[2]}")
+		print (f"Roll: {sensorfusion.roll} ; Pitch : {sensorfusion.pitch} ; Yaw : {sensorfusion.yaw}")
 		print ("")
