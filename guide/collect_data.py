@@ -81,15 +81,15 @@ def data_collection(mins, path):
 	with open(path+"/last.txt") as f:
 		count = int(f.read())
 
-	start_time = time.time()	
+	START_TIME = time.time()	
+
+	currTime = START_TIME
 
 	count = 0	
-	currTime = time.time()
-
 	capture_timer = 0 # the below while loop has a frequency of 100 loops per second which is too many pictures to take a second we should should count every 100 loops and take a picture at those points
 
 	# Loop until specified minutes have elasped
-	while time.time() - start_time < mins*60:
+	while time.time() - START_TIME < mins*60:
 		capture_timer+=1
 
 		# Calculate values for the displacement angle and halt signal
