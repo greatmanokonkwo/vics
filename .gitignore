@@ -1,4 +1,4 @@
 # exclude the YOLOv3 weights file because of large size
 speech_and_comms/scene_describe_system/yolov3.weights
 speech_and_comms/scene_describe_system/response.wav
-
+devices/calib.json
