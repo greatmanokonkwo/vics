@@ -71,11 +71,14 @@ class GuideSystem:
 		return (class_angle - 11.25, class_angle + 11.25)
 
 	def run():
+		"""
 		# Collect image and run inference
 		self.cam.save_image("captured.jpg")
 		tensor = transforms.ToTensor()
 		img = tensor(Image.open("capture.jpg"))
 		direct_class = self.model(img.unsqueeze(0))[0]
+		"""
+		direct_class = 4	
 
 		# if halt signal is not inferred run direction signalling, else run halt signalling
 		if direct_class != 9:

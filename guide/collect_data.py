@@ -18,6 +18,7 @@ imu = None
 cam = None
 
 initial_yaw = 0
+currTime = 0
 
 def initialize_devices(width=256, height=256):
 	global imu
@@ -75,6 +76,19 @@ def get_direction_class(angle):
 	elif (angle <= 101.25) & (angle >= 78.75):
 		return 8
 		
+def calculate_vals():
+	
+	# Calculate the change in the yaw angle of the mpu9250 device
+	imu.readSensor()
+	imu.computeOrientation()
+	newTime = time.time()
+	dt = newTime - currTime
+	currTime = newTime
+
+	sensorfusion.computeAndUpdateRollPitchYaw(imu.AccelVals[0], imu.AccelVals[1], imu.AccelVals[2], imu.GyroVals[0], imu.GyroVals[1], imu.GyroVals[2],     imu.MagVals[0], imu.MagVals[1], imu.MagVals[2], dt)
+
+
+
 # Data collection process	
 def data_collection(mins, path):
 	# Get the ID of the last processed data sample
@@ -87,36 +101,33 @@ def data_collection(mins, path):
 
 	capture_timer = 0 # the below while loop has a frequency of 100 loops per second which is too many pictures to take a second we should should count every 100 loops and take a picture at those points
 	prev_yaw = 0
+	direct_class = None
+
 	# Loop until specified minutes have elasped
 	while time.time() - START_TIME < mins*60:
 		capture_timer+=1
-
+		
 		# Calculate values for the displacement angle and halt signal
 		halt = get_halt_signal(imu.AccelVals[1])
 
-		# Calculate the change in the yaw angle of the mpu9250 device
-		imu.readSensor()
-		imu.computeOrientation()
-		newTime = time.time()
-		dt = newTime - currTime
-		currTime = newTime
-
-		sensorfusion.computeAndUpdateRollPitchYaw(imu.AccelVals[0], imu.AccelVals[1], imu.AccelVals[2], imu.GyroVals[0], imu.GyroVals[1], imu.GyroVals[2],     imu.MagVals[0], imu.MagVals[1], imu.MagVals[2], dt)
-
-
+		calculate_yaw()
 		yaw_angle = sensorfusion.yaw - initial_yaw # The magnetometer measures heading from the earth's true north, we need to set the user's initial heading as the reference point
 
 		# Determine the motion class of given the angle and halt signal
-		direct_class = None
 		angle = int(yaw_angle - prev_yaw)
-		if halt:
-			direct_class = 9
-		else:
-			direct_class = get_direction_class(float(angle))
-		
+
+		if abs(angle) > abs(max_angle):
+			max_angle = angle
+				
 		# Save the image as well as the motion in format direct_class/id_angle.jpg
 		if capture_timer == 100:
-			cam.save_image(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(angle)+".jpg")
+			if halt:
+				direct_class = 9
+			else:
+				direct_class = get_direction_class(max_angle)
+
+			cam.save_image(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg")
+			max_angle = 0
 			capture_timer = 0
 			count+=1
 
