@@ -95,7 +95,7 @@ class GuideSystem:
 			yaw_angle = 0
 			print (upper, lower)
 			time.sleep(3)
-			while not (yaw_angle < upper and yaw_angle >= lower):
+			while not (yaw_angle < upper and yaw_angle >= lower): # While displacement angle not in range of predict direction class
 				# Calculate the displaced angle of user using IMU sensor
 				self.imu.readSensor()
 				self.imu.computeOrientation()
