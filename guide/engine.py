@@ -21,7 +21,7 @@ from devices.picam import picam
 
 class GuideSystem:
 	# GPIO pins for the two information relay vibration motors
-	LEFT_BUZZER = 37 
+	LEFT_BUZZER = 35
 	RIGHT_BUZZER = 7
 
 	INITIAL_YAW = 0 # Magnetometer measures heading relative to true north, we need to meausure relative user's initial heading 
