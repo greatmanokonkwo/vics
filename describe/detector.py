@@ -2,7 +2,7 @@ import cv2
 from darknet import Darknet
 from util import *
 from torch.autograd import Variable
-import torch.cuda
+import torch
 
 class ObjectDetector:
 	def __init__(self, confidence=0.5, nms_thresh=0.4, reso=416):
@@ -31,9 +31,10 @@ class ObjectDetector:
 
 	def detect(self, img):
 		img_ = prep_image(img, self.inp_dim)
-		print(img_)
+	
+		if torch.cuda.is_available():
+			img_.cuda()
 
-		img_.cuda()
 		pred = self.model(img_, torch.cuda.is_available())
 		res = write_results(pred, self.confidence, self.num_classes)[:,[1,2,3,4,7]] # only take the 4 corner coordinate points and class index
 	
