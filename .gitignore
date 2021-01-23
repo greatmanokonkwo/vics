@@ -1,4 +1,8 @@
 # exclude the YOLOv3 weights file because of large size
-speech_and_comms/scene_describe_system/yolov3.weights
-speech_and_comms/scene_describe_system/response.wav
+describe/yolov3.weights
+describe/response.wav
+describe/__pycache__
+guide/__pycache__
 devices/calib.json
+devices/__pycache__
+guide/dataset

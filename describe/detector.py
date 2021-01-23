@@ -31,7 +31,9 @@ class ObjectDetector:
 
 	def detect(self, img):
 		img_ = prep_image(img, self.inp_dim)
+		print(img_)
 
+		img_.cuda()
 		pred = self.model(img_, torch.cuda.is_available())
 		res = write_results(pred, self.confidence, self.num_classes)[:,[1,2,3,4,7]] # only take the 4 corner coordinate points and class index
 	
@@ -46,5 +48,5 @@ class ObjectDetector:
 
 if __name__=="__main__":
 	detector = ObjectDetector()
-	img = cv2.imread("dog-cycle-car.png")
+	img = cv2.imread(input("Input image path: "))
 	detector.detect(img)

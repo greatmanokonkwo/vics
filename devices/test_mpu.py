@@ -13,7 +13,8 @@ imu = MPU9250.MPU9250(bus, address)
 imu.begin()
 
 calib_file = "/home/greatman/code/vics/devices/calib.json"
-	
+
+"""
 caliberate = str(input("Do you want to caliberate the sensor: "))
 
 if caliberate.lower() == "yes":
@@ -38,7 +39,8 @@ if caliberate.lower() == "yes":
 		print ("calib loaded properly")
 else:
 	if os.path.exists(calib_file):
-		imu.loadCalibDataFromFile(calib_file)	
+"""
+imu.loadCalibDataFromFile(calib_file)	
 
 sensorfusion = kalman.Kalman()
 
@@ -71,5 +73,5 @@ while True:
 		print(f"Accelorometer: {imu.AccelVals[0]} {imu.AccelVals[1]} {imu.AccelVals[2]}")
 		print(f"Gyroscope: {imu.GyroVals[0]} {imu.GyroVals[1]} {imu.GyroVals[2]}")
 		print(f"Magnetometer: {imu.MagVals[0]} {imu.MagVals[1]} {imu.MagVals[2]}")
-		print (f"Roll: {sensorfusion.roll} ; Pitch : {sensorfusion.pitch} ; Yaw : {sensorfusion.yaw}")
+		print (f"Roll: {int(sensorfusion.roll)} ; Pitch : {int(sensorfusion.pitch)} ; Yaw : {int(sensorfusion.yaw)}")
 		print ("")

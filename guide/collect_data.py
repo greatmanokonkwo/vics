@@ -1,6 +1,6 @@
 # Add vics directory to sys path to have access to devices module
-import os,sys
-sys.path.append("..")
+import os
+os.sys.path.append("..")
 
 import time
 import smbus
@@ -18,6 +18,7 @@ imu = None
 cam = None
 
 initial_yaw = 0
+currTime = 0
 
 def initialize_devices(width=256, height=256):
 	global imu
@@ -28,7 +29,7 @@ def initialize_devices(width=256, height=256):
 	# Initialize MPU-6050 device
 	address = 0x68
 	bus = smbus.SMBus(1)
-	imu = MPU9250
+	imu = MPU9250.MPU9250(bus, address)
 	imu.begin()
 	
 	calib_file = "../devices/calib.json" # path of caliberation file with caliberated values
@@ -44,11 +45,11 @@ def initialize_devices(width=256, height=256):
 	sensorfusion.pitch = imu.pitch
 	sensorfusion.yaw = imu.yaw
 
-	initial_yaw = imu.yaw
+	print("Initial yaw: ", initial_yaw)
 
 def get_halt_signal(accel):
 	# The halt signal will be ON if a large negative value in the x-direction is calculated
-	if abs(accel) > 10 and accel%2!=0:
+	if abs(accel) > 1.5 and accel%2!=0:
 		return 1
 	else: 
 		return 0
@@ -56,25 +57,39 @@ def get_halt_signal(accel):
 # Classify a given angle in degrees as one of the 9 direction classes
 # [-PI/2, -3PI/8, -PI/4, -PI/8, 0, PI/8, PI/4, 3PI/8, PI/2]
 def get_direction_class(angle):
-	if angle > -78.75 & angle <= -101.25:
+	if (angle < -78.75) & (angle >= -101.25):
 		return 0
-	elif angle > -56.25 & angle <= -78.75:
+	elif (angle < -56.25) & (angle >= -78.75):
 		return 1
-	elif angle > -33.75 & angle <= -56.25:
+	elif (angle < -33.75) & (angle >= -56.25):
 		return 2
-	elif angle > -11.25 & angle <= -33.75:
+	elif (angle < -11.25) & (angle >= -33.75):
 		return 3
-	elif angle > 11.25 & angle <= -11.25:
+	elif (angle < 11.25) & (angle >= -11.25):
 		return 4
-	elif angle > 33.75 & angle <= 11.25:
+	elif (angle < 33.75) & (angle >= 11.25):
 		return 5
-	elif angle > 56.25 & angle <= 33.75:
+	elif (angle < 56.25) & (angle >= 33.75):
 		return 6
-	elif angle > 78.75 & angle <= 56.25:
+	elif (angle < 78.75) & (angle >= 56.25):
 		return 7
-	elif angle >= 101.25 & angle <= 78.75:
+	elif (angle <= 101.25) & (angle >= 78.75):
 		return 8
 		
+def calculate_yaw():
+	global currTime	
+
+	# Calculate the change in the yaw angle of the mpu9250 device
+	imu.readSensor()
+	imu.computeOrientation()
+	newTime = time.time()
+	dt = newTime - currTime
+	currTime = newTime
+
+	sensorfusion.computeAndUpdateRollPitchYaw(imu.AccelVals[0], imu.AccelVals[1], imu.AccelVals[2], imu.GyroVals[0], imu.GyroVals[1], imu.GyroVals[2],     imu.MagVals[0], imu.MagVals[1], imu.MagVals[2], dt)
+
+
+
 # Data collection process	
 def data_collection(mins, path):
 	# Get the ID of the last processed data sample
@@ -85,42 +100,47 @@ def data_collection(mins, path):
 
 	currTime = START_TIME
 
-	count = 0	
 	capture_timer = 0 # the below while loop has a frequency of 100 loops per second which is too many pictures to take a second we should should count every 100 loops and take a picture at those points
+	prev_yaw = 0
+	direct_class = None
+	max_angle = 0
+	max_halt = None
+
+	# The sensor has a problem that causes it to start at really off values so this keeps it in loop until it corrects itself
+	
 
 	# Loop until specified minutes have elasped
 	while time.time() - START_TIME < mins*60:
 		capture_timer+=1
-
+		
 		# Calculate values for the displacement angle and halt signal
-		halt = get_halt_signal(imu.AccelVals[1])
+		halt = get_halt_signal(-imu.AccelVals[1])
 
-		# Calculate the change in the yaw angle of the mpu9250 device
-		imu.readSensor()
-		imu.computeOrientation()
-		newTime = time.time()
-		dt = newTime - currTime
-		currTime = newTime
-
-		sensorfusion.computeAndUpdateRollPitchYaw(imu.AccelVals[0], imu.AccelVals[1], imu.AccelVals[2], imu.GyroVals[0], imu.GyroVals[1], imu.GyroVals[2],     imu.MagVals[0], imu.MagVals[1], imu.MagVals[2], dt)
-
-
-		yaw_angle = sensorfusion.yaw - initial_yaw # The magnetometer measures heading from the earth's true north, we need to set the user's initial heading as the reference point
+		calculate_yaw()
+		yaw_angle = (-sensorfusion.yaw) - initial_yaw - 90# The magnetometer measures heading from the earth's true north, we need to set the user's initial heading as the reference point
 
 		# Determine the motion class of given the angle and halt signal
-		direct_class = None
-		if halt:
-			direct_class = 9
-		else:
-			direct_class = get_direction_class(yaw_angle - prev_yaw)
-		
+		angle = int(yaw_angle - prev_yaw) # The displacement angle is the (yaw angle) - (previous yaw angle)
+
+		if abs(angle) > abs(max_angle):
+			max_angle = angle
+			max_halt = halt
+				
+		print(yaw_angle, sensorfusion.yaw, initial_yaw)
 		# Save the image as well as the motion in format direct_class/id_angle.jpg
 		if capture_timer == 100:
-			cam.save_image(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(yaw_angle - prev_yaw)+".jpg")
+			if max_halt:
+				direct_class = 9
+			else:
+				direct_class = get_direction_class(max_angle)
+
+			print(max_angle)
+			cam.save_image(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg")
+			max_angle = 0
 			capture_timer = 0
+			prev_yaw = yaw_angle
 			count+=1
 
-		prev_yaw = yaw_angle
 
 		time.sleep(0.01)
 			
@@ -131,6 +151,7 @@ def data_collection(mins, path):
 if __name__=="__main__":
 	data_path = str(input("Where should the dataset be stored (The path should contain a last.txt file and an images directory):"))
 	initialize_devices()
-	time.sleep(30)
-	data_collection(mins=0.5, path=data_path)
+	print ("Get set up. Data collection will start in 30 seconds.")
+	time.sleep(0)
+	data_collection(mins=3, path=data_path)
 	cam.cleanup()

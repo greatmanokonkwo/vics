@@ -105,8 +105,10 @@ class GuideSystem:
 
 				self.sensorfusion.computeAndUpdateRollPitchYaw(self.imu.AccelVals[0], self.imu.AccelVals[1], self.imu.AccelVals[2], self.imu.GyroVals[0], self.imu.GyroVals[1], self.imu.GyroVals[2], self.imu.MagVals[0], self.imu.MagVals[1], self.imu.MagVals[2], dt)
 
-				yaw_angle = self.sensorfusion.yaw - self.INITIAL_YAW
+				yaw_angle = self.sensorfusion.yaw - int(self.INITIAL_YAW)
+				print(self.sensorfusion.yaw, self.INITIAL_YAW)
 
+			print("Done")
 			self.prev_yaw = yaw_angle
 			GPIO.output(buzzer, 0)	
 			
