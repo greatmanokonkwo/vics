@@ -2,10 +2,15 @@
 Processes the output of the YOLO objection detection algorithm to get a list of object that were found in the image as well as their locations.
 The engine then uses a text-to-speech module to say what was in the captured scenery
 """
+from os import sys
+sys.path.append("..")
+
 import numpy as np
 from devices.picam import picam
 from devices.google_voice import GoogleVoice
 from detector import ObjectDetector
+
+import time # Take out
 
 class SceneDescribeSystem:
 	
@@ -18,7 +23,7 @@ class SceneDescribeSystem:
 		# Speakers
 
 		# Speech to text module
-		self.voice = GoogleVoice()
+		#self.voice = GoogleVoice()
 
 		# object detector
 		self.detector = ObjectDetector()
@@ -90,11 +95,13 @@ class SceneDescribeSystem:
 			response += ("{0} corner of the scene, ".format(objs[i][1]))
 
 		return response[:-2] # get rid of extra ", " at end
-				
-	# Capture the scene and returned voice response of the objects in the scene
-	def run(self, division=2):
-		# Capture image
-		img = self.picam.capture_image()
+
+	def cleanup(self):
+		self.cam.cleanup()
+
+	def run(self):
+		# Capture the scene and returned voice response of the objects in the scene def run(self, division=2): # Capture image
+		img = self.cam.capture_image()
 	
 		# Run inference
 		res = self.detector.detect(img)
@@ -112,14 +119,17 @@ class SceneDescribeSystem:
 		print(response)
 		
 		# Turn generated response to speech
-		self.voice.text_to_speech(text=response, name="response")	
+		#self.voice.text_to_speech(text=response, name="response")	
 
 		# Send generated audio file "response.wav" to speakers
 
 		# Delete response.wav
 		
-		self.picam.cleanup()
-
+	
 if __name__=="__main__":
 	system = SceneDescribeSystem()
-	system.run()
+	start = time.time()
+	while time.time() - start < 2*60:
+		system.run()
+		time.sleep(1)
+	system.cleanup()

@@ -5,7 +5,7 @@ Left buzzer ON (continous) - Turn left by required degrees
 Right buzzer ON (continous) - Turn right by the required degrees
 Left and Right buzzer ON (4 secs) - Stop!
 """
-import sys,os
+import sys.os
 sys.path.append("..")
 
 import time
@@ -17,14 +17,15 @@ from torchvision import transforms
 
 from imusensor.MPU9250 import MPU9250
 from imusensor.filters import kalman
+
 from devices.picam import picam
+from neuralnet.GuideNet import GuideNet
 
 class GuideSystem:
 	# GPIO pins for the two information relay vibration motors
 	LEFT_BUZZER = 35
 	RIGHT_BUZZER = 7
 
-	INITIAL_YAW = 0 # Magnetometer measures heading relative to true north, we need to meausure relative user's initial heading 
 	def __init__(self):
 		# The Raspberry Pi Camera V2 for taking images 
 		self.cam = picam(width=256, height=256)
@@ -50,7 +51,7 @@ class GuideSystem:
 		self.sensorfusion.pitch = self.imu.pitch
 		self.sensorfusion.yaw = self.imu.yaw			
 
-		self.INITIAL_YAW = self.imu.yaw
+		self.INITIAL_YAW = self.imu.yaw # Magnetometer measures heading relative to true north, we need to meausure relative user's initial heading 
 		self.prev_yaw = 0
 
 		# Setup buzzer GPIO to output
@@ -62,36 +63,39 @@ class GuideSystem:
 		device = (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
 		self.model = GuideNet().to(device=device) 
 		model_path = os.getcwd() + "/neuralnet/guide_net.pt"
-		if os.path.exists():
+		if os.path.exists(model_path):
 			self.model.load_state_dict(torch.load(model_path))
 
+		self.tensor = transforms.ToTensor()
+
 	# The formula to calculate the range of the direction class is: (class*PI/8 - PI/2) +- PI/16
-	def __get_direction_class_range(direct_class):
+	def __get_direction_class_range(self, direct_class):
 		class_angle = direct_class*22.5 - 90
 		return (class_angle - 11.25, class_angle + 11.25)
 
-	def run():
+	def run(self):
 		"""
 		# Collect image and run inference
 		self.cam.save_image("captured.jpg")
-		tensor = transforms.ToTensor()
-		img = tensor(Image.open("capture.jpg"))
+		img = self.tensor(Image.open("capture.jpg"))
 		direct_class = self.model(img.unsqueeze(0))[0]
 		"""
-		direct_class = 4	
+		direct_class = 7
 
 		# if halt signal is not inferred run direction signalling, else run halt signalling
 		if direct_class != 9:
 			# Get acceptable movement range for the specified direction class
-			lower, upper = get_direction_class_range(direct_class)
+			lower, upper = self.__get_direction_class_range(direct_class)
 
 			# Direction signal involves turning on the buzzer that corresponds to the direction that the user is supposed to go to and continously vibrating it until the user has moved to the right angle
-			buzzer = RIGHT_BUZZER if direct_class>4 else LEFT_BUZZER
+			buzzer = self.RIGHT_BUZZER if direct_class>4 else self.LEFT_BUZZER
 			GPIO.output(buzzer, 1)
 			
 			currTime = time.time()	
 			yaw_angle = 0
-			while not (yaw_angle > upper and yaw_angle <= lower):
+			print (upper, lower)
+			time.sleep(3)
+			while not (yaw_angle < upper and yaw_angle >= lower): # While displacement angle not in range of predict direction class
 				# Calculate the displaced angle of user using IMU sensor
 				self.imu.readSensor()
 				self.imu.computeOrientation()
@@ -99,12 +103,10 @@ class GuideSystem:
 				dt = newTime - currTime
 				currTime = newTime
 
-				sensorfusion.computeAndUpdateRollPitchYaw(self.imu.AccelVals[0], self.imu.AccelVals[1], self.imu.AccelVals[2], self.imu.GyroVals[0], self.imu.GyroVals[1], self.imu.GyroVals[2], self.imu.MagVals[0], self.imu.MagVals[1], self.imu.MagVals[2], dt)
+				self.sensorfusion.computeAndUpdateRollPitchYaw(self.imu.AccelVals[0], self.imu.AccelVals[1], self.imu.AccelVals[2], self.imu.GyroVals[0], self.imu.GyroVals[1], self.imu.GyroVals[2], self.imu.MagVals[0], self.imu.MagVals[1], self.imu.MagVals[2], dt)
 
-				yaw_angle = (self.sensorfusion.yaw - self.INITIAL_YAW) - self.prev_yaw
+				yaw_angle = self.sensorfusion.yaw - self.INITIAL_YAW
 
-				time.sleep(0.01)
-			
 			self.prev_yaw = yaw_angle
 			GPIO.output(buzzer, 0)	
 			

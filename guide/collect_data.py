@@ -45,11 +45,11 @@ def initialize_devices(width=256, height=256):
 	sensorfusion.pitch = imu.pitch
 	sensorfusion.yaw = imu.yaw
 
-	initial_yaw = imu.yaw
+	print("Initial yaw: ", initial_yaw)
 
 def get_halt_signal(accel):
 	# The halt signal will be ON if a large negative value in the x-direction is calculated
-	if abs(accel) > 10 and accel%2!=0:
+	if abs(accel) > 1.5 and accel%2!=0:
 		return 1
 	else: 
 		return 0
@@ -76,8 +76,9 @@ def get_direction_class(angle):
 	elif (angle <= 101.25) & (angle >= 78.75):
 		return 8
 		
-def calculate_vals():
-	
+def calculate_yaw():
+	global currTime	
+
 	# Calculate the change in the yaw angle of the mpu9250 device
 	imu.readSensor()
 	imu.computeOrientation()
@@ -102,36 +103,41 @@ def data_collection(mins, path):
 	capture_timer = 0 # the below while loop has a frequency of 100 loops per second which is too many pictures to take a second we should should count every 100 loops and take a picture at those points
 	prev_yaw = 0
 	direct_class = None
+	max_angle = 0
+	max_halt = None
 
 	# Loop until specified minutes have elasped
 	while time.time() - START_TIME < mins*60:
 		capture_timer+=1
 		
 		# Calculate values for the displacement angle and halt signal
-		halt = get_halt_signal(imu.AccelVals[1])
+		halt = get_halt_signal(-imu.AccelVals[1])
 
 		calculate_yaw()
-		yaw_angle = sensorfusion.yaw - initial_yaw # The magnetometer measures heading from the earth's true north, we need to set the user's initial heading as the reference point
+		yaw_angle = (-sensorfusion.yaw) - initial_yaw - 90# The magnetometer measures heading from the earth's true north, we need to set the user's initial heading as the reference point
 
 		# Determine the motion class of given the angle and halt signal
-		angle = int(yaw_angle - prev_yaw)
+		angle = int(yaw_angle - prev_yaw) # The displacement angle is the (yaw angle) - (previous yaw angle)
 
 		if abs(angle) > abs(max_angle):
 			max_angle = angle
+			max_halt = halt
 				
+		print(yaw_angle, sensorfusion.yaw, initial_yaw)
 		# Save the image as well as the motion in format direct_class/id_angle.jpg
 		if capture_timer == 100:
-			if halt:
+			if max_halt:
 				direct_class = 9
 			else:
 				direct_class = get_direction_class(max_angle)
 
+			print(max_angle)
 			cam.save_image(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg")
 			max_angle = 0
 			capture_timer = 0
+			prev_yaw = yaw_angle
 			count+=1
 
-		prev_yaw = yaw_angle
 
 		time.sleep(0.01)
 			
@@ -144,5 +150,5 @@ if __name__=="__main__":
 	initialize_devices()
 	print ("Get set up. Data collection will start in 30 seconds.")
 	time.sleep(0)
-	data_collection(mins=3, path=data_path)
+	data_collection(mins=0.5, path=data_path)
 	cam.cleanup()

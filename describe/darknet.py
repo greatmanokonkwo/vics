@@ -7,17 +7,6 @@ from torch.autograd import Variable
 import numpy as np
 from util import * 
 
-
-
-def get_test_input():
-    img = cv2.imread("dog-cycle-car.png")
-    img = cv2.resize(img, (416,416))          #Resize to the input dimension
-    img_ =  img[:,:,::-1].transpose((2,0,1))  # BGR -> RGB | H X W C -> C X H X W 
-    img_ = img_[np.newaxis,:,:,:]/255.0       #Add a channel at 0 (for batch) | Normalise
-    img_ = torch.from_numpy(img_).float()     #Convert to float
-    img_ = Variable(img_)                     # Convert to Variable
-    return img_
-
 def parse_cfg(cfgfile):
     """
     Takes a configuration file
@@ -173,6 +162,7 @@ class Darknet(nn.Module):
     def forward(self, x, CUDA):
 		if CUDA:
 			self.module_list.cuda()
+            x.cuda()
 
         modules = self.blocks[1:]
         outputs = {}   #We cache the outputs for the route layer
@@ -316,6 +306,3 @@ class Darknet(nn.Module):
                 
                 conv_weights = conv_weights.view_as(conv.weight.data)
                 conv.weight.data.copy_(conv_weights)
-
-inp = get_test_input()
-print(inp.shape)
