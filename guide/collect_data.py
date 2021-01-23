@@ -106,9 +106,6 @@ def data_collection(mins, path):
 	max_angle = 0
 	max_halt = None
 
-	# The sensor has a problem that causes it to start at really off values so this keeps it in loop until it corrects itself
-	
-
 	# Loop until specified minutes have elasped
 	while time.time() - START_TIME < mins*60:
 		capture_timer+=1
@@ -153,5 +150,5 @@ if __name__=="__main__":
 	initialize_devices()
 	print ("Get set up. Data collection will start in 30 seconds.")
 	time.sleep(0)
-	data_collection(mins=3, path=data_path)
+	data_collection(mins=0.5, path=data_path)
 	cam.cleanup()
