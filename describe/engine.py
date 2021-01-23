@@ -72,6 +72,10 @@ class SceneDescribeSystem:
 		response = ""
 	
 		num_objs = len(objs)
+
+		if num_objs == 0:
+			return "Sorry, no objects were detected."
+
 		for i in range(num_objs):
 			if i == (num_objs-1):
 				response += ("and ")

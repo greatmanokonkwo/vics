@@ -171,6 +171,9 @@ class Darknet(nn.Module):
         self.net_info, self.module_list = create_modules(self.blocks)
         
     def forward(self, x, CUDA):
+		if CUDA:
+			self.module_list.cuda()
+
         modules = self.blocks[1:]
         outputs = {}   #We cache the outputs for the route layer
         
