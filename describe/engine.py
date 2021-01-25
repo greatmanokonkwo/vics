@@ -11,10 +11,12 @@ from devices.google_voice import GoogleVoice
 from detector import ObjectDetector
 
 import time # Take out
+import asyncio
 
 class SceneDescribeSystem:
 	
-	def __init__(self, scene_size=416):
+	def __init__(self, scene_size=416, division=1):
+		self.division = division # Use _get_object_location1 or __get_object_location2
 		self.scene_size = scene_size
 
 		# Raspbery Pi Cam for taking 416x416 images of scenery
@@ -78,9 +80,6 @@ class SceneDescribeSystem:
 	
 		num_objs = len(objs)
 
-		if num_objs == 0:
-			return "Sorry, no objects were detected."
-
 		for i in range(num_objs):
 			if i == (num_objs-1):
 				response += ("and ")
@@ -99,23 +98,29 @@ class SceneDescribeSystem:
 	def cleanup(self):
 		self.cam.cleanup()
 
-	def run(self):
+	async def run(self):
 		# Capture the scene and returned voice response of the objects in the scene def run(self, division=2): # Capture image
 		img = self.cam.capture_image()
 	
 		# Run inference
-		res = self.detector.detect(img)
+		res = await self.detector.detect(img)
 
-		# Create python list of the objects of the format [class_name, object_location]
-		objs = []
-		for obj in res:
-			if division == 1:
-				objs.append([obj[4], self.__get_object_location1(obj[0], obj[1], obj[2], obj[3])])
-			else:
-				objs.append([obj[4], self.__get_object_location2(obj[0], obj[1], obj[2], obj[3])])
+		response = None
+		if type(res) != int:
+			# Create python list of the objects of the format [class_name, object_location]
+			objs = []
+			for obj in res:
+				if self.division == 1:
+					objs.append([obj[4], self.__get_object_location1(obj[0], obj[1], obj[2], obj[3])])
+				else:
+					objs.append([obj[4], self.__get_object_location2(obj[0], obj[1], obj[2], obj[3])])
 		
-		# Generate response using list
-		response = self.__generate_response(objs)
+			# Generate response using list
+			response = self.__generate_response(objs)
+
+		else:
+			response = "Sorry, no objects were detected."
+
 		print(response)
 		
 		# Turn generated response to speech
@@ -125,11 +130,11 @@ class SceneDescribeSystem:
 
 		# Delete response.wav
 		
-	
-if __name__=="__main__":
+async def main():
 	system = SceneDescribeSystem()
 	start = time.time()
-	while time.time() - start < 2*60:
-		system.run()
-		time.sleep(1)
+	while time.time() - start < 1*60:
+		await system.run()
 	system.cleanup()
+
+asyncio.run(main())

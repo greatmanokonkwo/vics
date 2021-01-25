@@ -6,12 +6,12 @@ import time
 import smbus
 
 from imusensor.MPU9250 import MPU9250
-from imusensor.filters import kalman
+from imusensor.filters import madgwick
 
 from devices.picam import picam
 
 # MPU9250 IMU sensor and sensorfusion algorithm
-sensorfusion = kalman.Kalman()
+sensorfusion = madgwick.Madgwick()
 imu = None 
 
 # Raspberry Pi Camera V2
@@ -36,16 +36,6 @@ def initialize_devices(width=256, height=256):
 
 	if os.path.exists(calib_file):	
 		imu.loadCalibDataFromFile(calib_file)
-
-	# Initialize sensor fusion algorithm roll, pitch and yaw values
-	imu.readSensor()
-	imu.computeOrientation()
-	
-	sensorfusion.roll = imu.roll
-	sensorfusion.pitch = imu.pitch
-	sensorfusion.yaw = imu.yaw
-
-	print("Initial yaw: ", initial_yaw)
 
 def get_halt_signal(accel):
 	# The halt signal will be ON if a large negative value in the x-direction is calculated
@@ -81,12 +71,13 @@ def calculate_yaw():
 
 	# Calculate the change in the yaw angle of the mpu9250 device
 	imu.readSensor()
-	imu.computeOrientation()
-	newTime = time.time()
-	dt = newTime - currTime
-	currTime = newTime
+	for i in range(10):
+		imu.computeOrientation()
+		newTime = time.time()
+		dt = newTime - currTime
+		currTime = newTime
 
-	sensorfusion.computeAndUpdateRollPitchYaw(imu.AccelVals[0], imu.AccelVals[1], imu.AccelVals[2], imu.GyroVals[0], imu.GyroVals[1], imu.GyroVals[2],     imu.MagVals[0], imu.MagVals[1], imu.MagVals[2], dt)
+		sensorfusion.updateRollPitchYaw(imu.AccelVals[0], imu.AccelVals[1], imu.AccelVals[2], imu.GyroVals[0], imu.GyroVals[1], imu.GyroVals[2],     imu.MagVals[0], imu.MagVals[1], imu.MagVals[2], dt)
 
 
 
@@ -104,26 +95,28 @@ def data_collection(mins, path):
 	prev_yaw = 0
 	direct_class = None
 	max_angle = 0
-	max_halt = None
+	max_halt = 0
+
+	initial_yaw = 0
 
 	# Loop until specified minutes have elasped
 	while time.time() - START_TIME < mins*60:
-		capture_timer+=1
-		
 		# Calculate values for the displacement angle and halt signal
 		halt = get_halt_signal(-imu.AccelVals[1])
+		max_halt = max(max_halt, halt)
 
 		calculate_yaw()
-		yaw_angle = (-sensorfusion.yaw) - initial_yaw - 90# The magnetometer measures heading from the earth's true north, we need to set the user's initial heading as the reference point
 
-		# Determine the motion class of given the angle and halt signal
+		# The sensor fusion algorithm spends the first few seconds of calculations slightly off. In order not the take this off values as are starting values we retake the initial_yaw for the first five seconds
+		if time.time() - START_TIMe < 5:
+			initial_yaw = initial_yaw
+		yaw_angle = -(sensorfusion.yaw - initial_yaw) # The magnetometer measures heading from the earth's true north, we need to set the user's initial heading as the reference point \
+		print(sensofusion.yaw, yaw_angle) # Determine the motion class of given the angle and halt signal
 		angle = int(yaw_angle - prev_yaw) # The displacement angle is the (yaw angle) - (previous yaw angle)
 
 		if abs(angle) > abs(max_angle):
 			max_angle = angle
-			max_halt = halt
 				
-		print(yaw_angle, sensorfusion.yaw, initial_yaw)
 		# Save the image as well as the motion in format direct_class/id_angle.jpg
 		if capture_timer == 100:
 			if max_halt:
@@ -134,11 +127,12 @@ def data_collection(mins, path):
 			print(max_angle)
 			cam.save_image(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg")
 			max_angle = 0
+			max_halt = 0
 			capture_timer = 0
 			prev_yaw = yaw_angle
 			count+=1
 
-
+		capture_timer+=1
 		time.sleep(0.01)
 			
 	# Update the start.txt file with ID of lastest processed data sample
@@ -150,5 +144,5 @@ if __name__=="__main__":
 	initialize_devices()
 	print ("Get set up. Data collection will start in 30 seconds.")
 	time.sleep(0)
-	data_collection(mins=0.5, path=data_path)
+	data_collection(mins=2, path=data_path)
 	cam.cleanup()
