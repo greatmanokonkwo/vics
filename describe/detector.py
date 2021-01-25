@@ -2,7 +2,7 @@ import cv2
 from darknet import Darknet
 from util import *
 from torch.autograd import Variable
-import torch
+import torch.cuda
 
 class ObjectDetector:
 	def __init__(self, confidence=0.5, nms_thresh=0.4, reso=416):
@@ -12,10 +12,11 @@ class ObjectDetector:
 		self.model = Darknet("cfg/yolov3.cfg")
 		self.model.load_weights("yolov3.weights")
 		print("Network successfully loaded")
-
+		
+		self.CUDA = torch.cuda.is_available()
 		self.model.net_info["height"] = reso
 		self.inp_dim = int(self.model.net_info["height"])
-		if torch.cuda.is_available():
+		if self.CUDA:
 			self.model.cuda()
 
 		self.model.eval()
@@ -29,24 +30,30 @@ class ObjectDetector:
 		self.num_classes = 80
 		self.classes = load_classes("data/coco.names")
 
-	def detect(self, img):
+	async def detect(self, img):
 		img_ = prep_image(img, self.inp_dim)
 	
 		if torch.cuda.is_available():
-			img_.cuda()
+			img_ = img_.cuda()
 
-		pred = self.model(img_, torch.cuda.is_available())
-		res = write_results(pred, self.confidence, self.num_classes)[:,[1,2,3,4,7]] # only take the 4 corner coordinate points and class index
-	
-		# Create a python list for all the objects with the format [x1,y1,x2,y2,class_name]
-		objs = []
-		for obj in res:
-			_ = obj[:4].tolist()
-			_.append(self.classes[int(obj[4])])
-			objs.append(_)
+		pred = await self.model(img_, torch.cuda.is_available())
+		res = write_results(pred, self.confidence, self.num_classes) # only take the 4 corner coordinate points and class index
 
-		return objs
+		if type(res) != int:
+			res = res[:,[1,2,3,4,7]]	
+			# Create a python list for all the objects with the format [x1,y1,x2,y2,class_name]
 
+			objs = []
+			for obj in res:
+				_ = obj[:4].tolist()
+				_.append(self.classes[int(obj[4])])
+				objs.append(_)
+
+			return objs
+
+		else:
+			return res	
+		
 if __name__=="__main__":
 	detector = ObjectDetector()
 	img = cv2.imread(input("Input image path: "))

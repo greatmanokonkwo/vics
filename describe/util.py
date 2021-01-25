@@ -70,7 +70,6 @@ def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA = True):
     x_offset = torch.FloatTensor(a).view(-1,1)
     y_offset = torch.FloatTensor(b).view(-1,1)
 
-	#Send tensors to GPU
     if CUDA:
         x_offset = x_offset.cuda()
         y_offset = y_offset.cuda()

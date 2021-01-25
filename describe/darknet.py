@@ -159,11 +159,7 @@ class Darknet(nn.Module):
         self.blocks = parse_cfg(cfgfile)
         self.net_info, self.module_list = create_modules(self.blocks)
         
-    def forward(self, x, CUDA):
-		if CUDA:
-			self.module_list.cuda()
-            x.cuda()
-
+    async def forward(self, x, CUDA):
         modules = self.blocks[1:]
         outputs = {}   #We cache the outputs for the route layer
         
@@ -191,13 +187,12 @@ class Darknet(nn.Module):
                     map1 = outputs[i + layers[0]]
                     map2 = outputs[i + layers[1]]
                     x = torch.cat((map1, map2), 1)
-                
-    
+
             elif  module_type == "shortcut":
                 from_ = int(module["from"])
                 x = outputs[i-1] + outputs[i+from_]
     
-            elif module_type == 'yolo':        
+            elif module_type == "yolo":        
                 anchors = self.module_list[i][0].anchors
                 #Get the input dimensions
                 inp_dim = int (self.net_info["height"])
