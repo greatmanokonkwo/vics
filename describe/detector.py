@@ -9,8 +9,8 @@ class ObjectDetector:
 		
 		#Load Darknet model for object detection
 		print("Loading network...")
-		self.model = Darknet("cfg/yolov3.cfg")
-		self.model.load_weights("yolov3.weights")
+		self.model = Darknet("cfg/yolov4-tiny.cfg")
+		self.model.load_weights("yolov4-tiny.weights")
 		print("Network successfully loaded")
 
 		self.model.net_info["height"] = reso
@@ -50,4 +50,4 @@ class ObjectDetector:
 if __name__=="__main__":
 	detector = ObjectDetector()
 	img = cv2.imread(input("Input image path: "))
-	detector.detect(img)
+	print(detector.detect(img))
