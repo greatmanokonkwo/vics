@@ -25,6 +25,8 @@ time_cnt = 0
 
 start_time = time.time()
 initial_yaw = 0
+
+init_accel = imu.AccelVals[1]
 while True:
 
 	imu.readSensor()
@@ -38,17 +40,17 @@ while True:
 
 	if time.time() - start_time < 10:
 		initial_yaw = sensorfusion.yaw	
-		print("Searching for initial yaw")
 
 	if time_cnt == 2:
 		time_cnt = 0	
-		print(f"Accelorometer: {imu.AccelVals[0]} {imu.AccelVals[1]} {imu.AccelVals[2]}")
-		print(f"Gyroscope: {imu.GyroVals[0]} {imu.GyroVals[1]} {imu.GyroVals[2]}")
-		print(f"Magnetometer: {imu.MagVals[0]} {imu.MagVals[1]} {imu.MagVals[2]}")
-		print (f"Roll: {int(sensorfusion.roll)} ; Pitch : {int(sensorfusion.pitch)} ; Yaw : {int(sensorfusion.yaw)}")
-		desired_yaw = int(-(sensorfusion.yaw - initial_yaw))
-		print(f"Desired Yaw: {desired_yaw} ; Initial Yaw: {initial_yaw}")
+		#print(f"Accelorometer: {imu.AccelVals[0]} {imu.AccelVals[1]} {imu.AccelVals[2]}")
+		#print(f"Gyroscope: {imu.GyroVals[0]} {imu.GyroVals[1]} {imu.GyroVals[2]}")
+		#print(f"Magnetometer: {imu.MagVals[0]} {imu.MagVals[1]} {imu.MagVals[2]}")
+		#print (f"Roll: {int(sensorfusion.roll)} ; Pitch : {int(sensorfusion.pitch)} ; Yaw : {int(sensorfusion.yaw)}")
+		#desired_yaw = int(-(sensorfusion.yaw - initial_yaw))
+		#print(f"Desired Yaw: {desired_yaw} ; Initial Yaw: {initial_yaw}")
+		print(int(100*(imu.AccelVals[1] - init_accel)))
 		print ("")
 
 	time_cnt+=1
-	time.sleep(0.01)
+	time.sleep(0.2)
