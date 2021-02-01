@@ -79,8 +79,6 @@ def calculate_yaw():
 
 		sensorfusion.updateRollPitchYaw(imu.AccelVals[0], imu.AccelVals[1], imu.AccelVals[2], imu.GyroVals[0], imu.GyroVals[1], imu.GyroVals[2],     imu.MagVals[0], imu.MagVals[1], imu.MagVals[2], dt)
 
-
-
 # Data collection process	
 def data_collection(mins, path):
 	# Get the ID of the last processed data sample
