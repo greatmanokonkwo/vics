@@ -22,8 +22,11 @@ class picam:
 			)
 		)
 
-	def save_image(self, path):
-		cv2.imwrite(path, self.capture_image())
+	def save_image(self, path, img=None):
+		if img is None:
+			cv2.imwrite(path, self.capture_image())
+		else:
+			cv2.imwrite(path, img)
 
 	def capture_image(self):
 		if self.cam.isOpened():

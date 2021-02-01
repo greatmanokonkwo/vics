@@ -18,7 +18,6 @@ imu = None
 cam = None
 
 initial_yaw = 0
-currTime = 0
 
 def initialize_devices(width=256, height=256):
 	global imu
@@ -36,13 +35,6 @@ def initialize_devices(width=256, height=256):
 
 	if os.path.exists(calib_file):	
 		imu.loadCalibDataFromFile(calib_file)
-
-def get_halt_signal(accel):
-	# The halt signal will be ON if a large negative value in the x-direction is calculated
-	if abs(accel) > 1.5 and accel%2!=0:
-		return 1
-	else: 
-		return 0
 
 # Classify a given angle in degrees as one of the 9 direction classes
 # [-PI/2, -3PI/8, -PI/4, -PI/8, 0, PI/8, PI/4, 3PI/8, PI/2]
@@ -65,12 +57,13 @@ def get_direction_class(angle):
 		return 7
 	elif (angle <= 101.25) & (angle >= 78.75):
 		return 8
+	else:
+		return -1
 		
 def calculate_yaw():
-	global currTime	
+	currTime = time.time()
 
 	# Calculate the change in the yaw angle of the mpu9250 device
-	imu.readSensor()
 	for i in range(10):
 		imu.computeOrientation()
 		newTime = time.time()
@@ -81,58 +74,85 @@ def calculate_yaw():
 
 # Data collection process	
 def data_collection(mins, path):
+	global prevTime_yaw, prevTime_vel
+
 	# Get the ID of the last processed data sample
 	with open(path+"/last.txt") as f:
 		count = int(f.read())
 
 	START_TIME = time.time()	
 
-	currTime = START_TIME
+	img_ = None
 
-	capture_timer = 0 # the below while loop has a frequency of 100 loops per second which is too many pictures to take a second we should should count every 100 loops and take a picture at those points
+	# Yaw calculation variables
 	prev_yaw = 0
 	direct_class = None
 	max_angle = 0
-	max_halt = 0
-
 	initial_yaw = 0
+
+	# Halt classification variables
+	## Halting is classified by using the principle that when people walk they oscillate up and down. Given the acceleration in the z-axis we can thus determine if the user is walking by calculating the amplitude value at a given interval. If the amplitude is below a certain threshold that means the user is not walking
+	midline = -9.8
+	thresh = 0.6
+	max_accel = -999	
+
+	interval_start = START_TIME
+	new_interval = True
 
 	# Loop until specified minutes have elasped
 	while time.time() - START_TIME < mins*60:
-		# Calculate values for the displacement angle and halt signal
-		halt = get_halt_signal(-imu.AccelVals[1])
-		max_halt = max(max_halt, halt)
+		imu.readSensor()
 
 		calculate_yaw()
 
+		newTime = time.time()
+
 		# The sensor fusion algorithm spends the first few seconds of calculations slightly off. In order not the take this off values as are starting values we retake the initial_yaw for the first five seconds
-		if time.time() - START_TIMe < 5:
+		if newTime - START_TIME < 5:
 			initial_yaw = initial_yaw
-		yaw_angle = -(sensorfusion.yaw - initial_yaw) # The magnetometer measures heading from the earth's true north, we need to set the user's initial heading as the reference point \
-		print(sensofusion.yaw, yaw_angle) # Determine the motion class of given the angle and halt signal
+			interval_start = newTime
+			continue
+			
+		# Take image at the start of new movement interval
+		if new_interval:
+			new_interval = False
+			img_ = cam.capture_image()
+
+		# Calculate maximum accelorometer value on the z-axis
+		max_accel = max(imu.AccelVals[2], max_accel)
+
+		yaw_angle = -(sensorfusion.yaw - initial_yaw) # The magnetometer measures heading from the earth's true north, we need to set the user's initial heading as the reference point
 		angle = int(yaw_angle - prev_yaw) # The displacement angle is the (yaw angle) - (previous yaw angle)
 
 		if abs(angle) > abs(max_angle):
 			max_angle = angle
 				
 		# Save the image as well as the motion in format direct_class/id_angle.jpg
-		if capture_timer == 100:
-			if max_halt:
-				direct_class = 9
+		if newTime - interval_start >= 1:
+
+			if (max_accel - midline) < thresh:
+				direct_class = 9 # Halt was detected
 			else:
 				direct_class = get_direction_class(max_angle)
 
-			print(max_angle)
-			cam.save_image(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg")
+			print(max_angle, max_accel, direct_class)
+
+			if direct_class != -1:
+				cam.save_image(path=(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg"), img=img_)
+			else:
+				print("Invalid movement direction")
+
 			max_angle = 0
 			max_halt = 0
-			capture_timer = 0
 			prev_yaw = yaw_angle
+	
+			max_accel = -999
+			
+			interval_start = time.time()
+			new_interval = True
+
 			count+=1
 
-		capture_timer+=1
-		time.sleep(0.01)
-			
 	# Update the start.txt file with ID of lastest processed data sample
 	with open(path+"/last.txt", "w") as f:
 		f.write(str(count))
@@ -140,6 +160,7 @@ def data_collection(mins, path):
 if __name__=="__main__":
 	data_path = str(input("Where should the dataset be stored (The path should contain a last.txt file and an images directory):"))
 	initialize_devices()
+
 	print ("Get set up. Data collection will start in 30 seconds.")
 	time.sleep(0)
 	data_collection(mins=2, path=data_path)
