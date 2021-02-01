@@ -60,17 +60,17 @@ def get_direction_class(angle):
 	else:
 		return -1
 		
-def calculate_yaw():
-	currTime = time.time()
-
+def calculate_yaw(currTime):
+	
 	# Calculate the change in the yaw angle of the mpu9250 device
 	for i in range(10):
-		imu.computeOrientation()
 		newTime = time.time()
 		dt = newTime - currTime
 		currTime = newTime
 
-		sensorfusion.updateRollPitchYaw(imu.AccelVals[0], imu.AccelVals[1], imu.AccelVals[2], imu.GyroVals[0], imu.GyroVals[1], imu.GyroVals[2],     imu.MagVals[0], imu.MagVals[1], imu.MagVals[2], dt)
+		sensorfusion.updateRollPitchYaw(imu.AccelVals[0], imu.AccelVals[1], imu.AccelVals[2], imu.GyroVals[0], imu.GyroVals[1], imu.GyroVals[2], imu.MagVals[0], imu.MagVals[1], imu.MagVals[2], dt)
+	
+	return currTime
 
 # Data collection process	
 def data_collection(mins, path):
@@ -99,17 +99,18 @@ def data_collection(mins, path):
 	interval_start = START_TIME
 	new_interval = True
 
+
+	currTime = time.time()
 	# Loop until specified minutes have elasped
 	while time.time() - START_TIME < mins*60:
 		imu.readSensor()
-
-		calculate_yaw()
+		currTime = calculate_yaw(currTime)
 
 		newTime = time.time()
 
 		# The sensor fusion algorithm spends the first few seconds of calculations slightly off. In order not the take this off values as are starting values we retake the initial_yaw for the first five seconds
-		if newTime - START_TIME < 5:
-			initial_yaw = initial_yaw
+		if newTime - START_TIME < 12.5:
+			initial_yaw = sensorfusion.yaw
 			interval_start = newTime
 			continue
 			
@@ -122,6 +123,7 @@ def data_collection(mins, path):
 		max_accel = max(imu.AccelVals[2], max_accel)
 
 		yaw_angle = -(sensorfusion.yaw - initial_yaw) # The magnetometer measures heading from the earth's true north, we need to set the user's initial heading as the reference point
+		print(sensorfusion.yaw)
 		angle = int(yaw_angle - prev_yaw) # The displacement angle is the (yaw angle) - (previous yaw angle)
 
 		if abs(angle) > abs(max_angle):
@@ -135,16 +137,17 @@ def data_collection(mins, path):
 			else:
 				direct_class = get_direction_class(max_angle)
 
-			print(max_angle, max_accel, direct_class)
-
+			"""
 			if direct_class != -1:
-				cam.save_image(path=(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg"), img=img_)
+				#cam.save_image(path=(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg"), img=img_)
+				print(max_angle, max_accel, direct_class)
 			else:
 				print("Invalid movement direction")
+			"""
 
 			max_angle = 0
 			max_halt = 0
-			prev_yaw = yaw_angle
+			prev_yaw = -(sensorfusion.yaw - initial_yaw)
 	
 			max_accel = -999
 			
