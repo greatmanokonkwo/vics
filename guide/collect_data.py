@@ -19,7 +19,7 @@ STOPPING:
 - The up and down motion is detected using the accelerometer sensors z-axis
 - At rest the value of the accelerometer's z-axis is -9.8 meters, representing the acceleration due to gravity
 - The algorithm calculates the accelerometer values over the spand of UPDATE_TIME and saves the maximum value over that interval
-- Then, if the difference between the maximum acceleration value and the rest value is greater than some threshold value THRESH, it is concluding that user is walking
+- Then, if the difference betwee n the maximum acceleration value and the rest value is greater than some threshold value THRESH, it is concluding that user is walking
 - The value of THRESH can be tweaked to match the walking style of the user.
 
 TESTING:
@@ -35,9 +35,7 @@ STOPPING CONDITIONS:
 
 WHAT TO DO:
 - Walk down multiple routes like you would normally do
-- Try to capture edge cases such as environments with glass doors, stairs, 
-
-
+- Try to capture edge cases such as environments with glass doors, stairs, and crosswalks from direction viewing angles, while walking
 
 """ 
 import os
