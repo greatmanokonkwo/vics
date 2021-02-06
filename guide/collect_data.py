@@ -25,7 +25,7 @@ STOPPING:
 TESTING:
 - For testing the angle, halt and final direction class values are printed out to the standard output
 - Looking at these values can help tweak some of the values like UPDATE_TIME and THRESH
-- To test yaw estimation go to devices/test_mpu.py
+- For more testing on the mpu9250 yaw estimation and halt detection, go to ../devices/test_mpu.py
 
 STOPPING CONDITIONS:
 - Stop when a human being is in front of you
