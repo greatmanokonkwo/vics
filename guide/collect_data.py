@@ -137,13 +137,11 @@ def data_collection(mins, path):
 			else:
 				direct_class = get_direction_class(max_angle)
 
-			"""
 			if direct_class != -1:
-				#cam.save_image(path=(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg"), img=img_)
+				cam.save_image(path=(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg"), img=img_)
 				print(max_angle, max_accel, direct_class)
 			else:
 				print("Invalid movement direction")
-			"""
 
 			max_angle = 0
 			max_halt = 0
@@ -165,6 +163,8 @@ if __name__=="__main__":
 	initialize_devices()
 
 	print ("Get set up. Data collection will start in 30 seconds.")
+	# Give time handle any setups to get collector ready to start taking in data
 	time.sleep(0)
+	# Change the minutes to the how long you want to run the program for 
 	data_collection(mins=2, path=data_path)
 	cam.cleanup()
