@@ -8,10 +8,12 @@ bus = smbus.SMBus(1)
 imu = MPU9250.MPU9250(bus, address)
 imu.begin()
 
-calib_file = "calib.json"
+calib_file = "./calib.json"
 
+start = input("Press enter to start caliberating Accelerometer: ")
 imu.caliberateAccelerometer()
 print ("Acceleration caliberation successful")
+start = input("Press enter to start caliberating Magnetometer: ")
 imu.caliberateMagPrecise()
 print ("Magnetometer caliberation successful")
 
