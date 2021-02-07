@@ -8,6 +8,8 @@ from describe.engine import SceneDescribeSystem
 from read.engine import ImageReadingSystem
 
 
+
+
 """
 COMMAND 0 (Guide): This enable to GuideNet process that relays angles of direction to travel in to the user, using vibrations
 COMMAND 1 (Describe): This enables the Scene description process, that detects various objects in front of the user and using voice, tells what these objects are and where they are located (left, center, right) relative to them
