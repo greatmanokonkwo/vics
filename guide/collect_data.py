@@ -123,7 +123,6 @@ def data_collection(mins, path):
 		max_accel = max(imu.AccelVals[2], max_accel)
 
 		yaw_angle = -(sensorfusion.yaw - initial_yaw) # The magnetometer measures heading from the earth's true north, we need to set the user's initial heading as the reference point
-		print(sensorfusion.yaw)
 		angle = int(yaw_angle - prev_yaw) # The displacement angle is the (yaw angle) - (previous yaw angle)
 
 		if abs(angle) > abs(max_angle):
@@ -132,18 +131,18 @@ def data_collection(mins, path):
 		# Save the image as well as the motion in format direct_class/id_angle.jpg
 		if newTime - interval_start >= 1:
 
-			if (max_accel - midline) < thresh:
-				direct_class = 9 # Halt was detected
-			else:
-				direct_class = get_direction_class(max_angle)
+                        halt = 0
+                        if (max_accel - midline) < thresh:
+                            direct_class = 9 # Halt was detected
+                            halt = 1
+                        else:
+                            direct_class = get_direction_class(max_angle)
 
-			"""
 			if direct_class != -1:
 				#cam.save_image(path=(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg"), img=img_)
-				print(max_angle, max_accel, direct_class)
+				print(max_angle, halt, direct_class)
 			else:
 				print("Invalid movement direction")
-			"""
 
 			max_angle = 0
 			max_halt = 0
