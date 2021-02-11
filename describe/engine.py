@@ -2,6 +2,9 @@
 Processes the output of the YOLO objection detection algorithm to get a list of object that were found in the image as well as their locations.
 The engine then uses a text-to-speech module to say what was in the captured scenery
 """
+import cv2
+import asyncio
+
 from os import sys
 sys.path.append("..")
 
@@ -11,7 +14,6 @@ from devices.google_voice import GoogleVoice
 from detector import ObjectDetector
 
 import time # Take out
-import asyncio
 
 class SceneDescribeSystem:
 	
@@ -98,12 +100,16 @@ class SceneDescribeSystem:
 	def cleanup(self):
 		self.cam.cleanup()
 
-	async def run(self):
+	def run(self):
 		# Capture the scene and returned voice response of the objects in the scene def run(self, division=2): # Capture image
-		img = self.cam.capture_image()
+		#img = self.cam.capture_image()
+		img = cv2.imread("dog-cycle-car.png")
 	
+		start = time.time()
 		# Run inference
-		res = await self.detector.detect(img)
+		res = self.detector.detect(img)
+		end = time.time()
+		print(f"Ran inference in {end - start} seconds!")
 
 		response = None
 		if type(res) != int:
@@ -130,11 +136,11 @@ class SceneDescribeSystem:
 
 		# Delete response.wav
 		
-async def main():
+if __name__=="__main__":
 	system = SceneDescribeSystem()
 	start = time.time()
-	while time.time() - start < 1*60:
-		await system.run()
+	while True:
+		system.run()
+		time.sleep(0.2)
 	system.cleanup()
 
-asyncio.run(main())

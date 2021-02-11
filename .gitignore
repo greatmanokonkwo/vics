@@ -1,5 +1,6 @@
 # exclude the YOLOv3 weights file because of large size
-describe/yolov3.weights
+describe/weights/yolov3-tiny.weights
+descrie/weights/yolov4-tiny.weights
 describe/response.wav
 describe/__pycache__
 guide/__pycache__
