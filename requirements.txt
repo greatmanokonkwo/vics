@@ -6,8 +6,8 @@ gTTS >= 2.2.1
 requests >= 2.22.0
 easydict
 smbus >= 1.1.post2
+pytesseract
 #Not for Jetson Nano
 #opencv-python >= 4.1.1
 #torch >= 1.7.0
 #torchvision >= 0.8.1
-

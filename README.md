@@ -44,6 +44,12 @@ gcloud iam service-accounts keys create ~/key.json --iam-account my-tts-sa@${PRO
 export GOOGLE_APPLICATION_CREDENTIALS=~/key.json
 ```
 
+### Google Tesseract-OCR Engine
+```
+sudo apt get install tesseract-ocr
+sudo apt-get install libjpeg8 libjpeg62-dev libfreetype6 libfreetype6-dev
+```
+
 ### YOLOV3 weights file
 
 Download the weights file in ``vics/speech_and_comms/scene_describe_system/weights``
