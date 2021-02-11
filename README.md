@@ -46,10 +46,10 @@ export GOOGLE_APPLICATION_CREDENTIALS=~/key.json
 
 ### YOLOV3 weights file
 
-Download the weights file in ``vics/speech_and_comms/scene_describe_system/neuralnet``
+Download the weights file in ``vics/speech_and_comms/scene_describe_system/weights``
 
 ```
-wget https://pjreddie.com/media/files/yolov3.weights
+wget https://pjreddie.com/media/files/yolov3-tiny.weights
 ```
 ## TO-DO 
 **NOTE:** All tasks involving the GPS Guidance System should be held off until everything else has been completed. This is only an extension of the project.
