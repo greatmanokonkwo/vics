@@ -141,6 +141,5 @@ if __name__=="__main__":
 	start = time.time()
 	while True:
 		system.run()
-		time.sleep(0.2)
 	system.cleanup()
 
