@@ -3,6 +3,7 @@ Processes the output of the YOLO objection detection algorithm to get a list of 
 The engine then uses a text-to-speech module to say what was in the captured scenery
 """
 import cv2
+import asyncio
 
 from os import sys
 sys.path.append("..")
@@ -102,7 +103,7 @@ class SceneDescribeSystem:
 	def run(self):
 		# Capture the scene and returned voice response of the objects in the scene def run(self, division=2): # Capture image
 		#img = self.cam.capture_image()
-		img = cv2.imread(input("Input test image path: "))
+		img = cv2.imread("dog-cycle-car.png")
 	
 		start = time.time()
 		# Run inference
@@ -138,6 +139,8 @@ class SceneDescribeSystem:
 if __name__=="__main__":
 	system = SceneDescribeSystem()
 	start = time.time()
-	while time.time() - start < 1*60:
+	while True:
 		system.run()
+		time.sleep(0.2)
 	system.cleanup()
+

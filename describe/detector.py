@@ -36,6 +36,7 @@ class ObjectDetector:
 
 		if self.CUDA:
 			img_ = img_.cuda()
+			torch.cuda.synchronize() # Wait for GPU to complete inference operations
 
 		pred = self.model(img_, self.CUDA)
 		res = write_results(pred, self.confidence, self.num_classes) # only take the 4 corner coordinate points and class index
