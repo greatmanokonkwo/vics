@@ -102,8 +102,8 @@ class SceneDescribeSystem:
 
 	def run(self):
 		# Capture the scene and returned voice response of the objects in the scene def run(self, division=2): # Capture image
-		#img = self.cam.capture_image()
-		img = cv2.imread("dog-cycle-car.png")
+		img = self.cam.capture_image()
+		#img = cv2.imread("dog-cycle-car.png")
 	
 		start = time.time()
 		# Run inference
@@ -137,10 +137,8 @@ class SceneDescribeSystem:
 		# Delete response.wav
 		
 if __name__=="__main__":
-	system = SceneDescribeSystem()
-	start = time.time()
-	while True:
-		system.run()
-		time.sleep(0.2)
-	system.cleanup()
+        system = SceneDescribeSystem()
+        start = time.time()
+        system.run()
+        system.cleanup()
 

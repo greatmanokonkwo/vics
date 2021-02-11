@@ -36,8 +36,8 @@ STOPPING CONDITIONS:
 WHAT TO DO:
 - Walk down multiple routes like you would normally do
 - Try to capture edge cases such as environments with glass doors, stairs, and crosswalks from direction viewing angles, while walking
-
 """ 
+
 import os
 os.sys.path.append("..")
 
