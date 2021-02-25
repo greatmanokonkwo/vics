@@ -8,23 +8,23 @@ class GoogleVoice:
 		self.client = texttospeech.TextToSpeechClient()
 	
 	def list_languages(self):
-		voices = client.list_voices().voices 
-		languages = unique_langueages_from_voices(voices) 
+		voices = self.client.list_voices().voices 
+		languages = self.__unique_languages_from_voices(voices) 
 	
 		print (f"Languages: {len(languages)}".center(60, "-")) 
 		for i, language in enumerate(sorted(languages)):
 			print (f"{language:>10}", end="" if i % 5 < 4 else "\n")
 	
-	def __unique_lnaguages_from_voices(self, voices):
+	def __unique_languages_from_voices(self, voices):
 		language_set = set()
-		for voices in voices:
+		for voice in voices:
 			for language_code in voice.language_codes:
 				language_set.add(language_code)
 
 		return language_set
 
 	def list_voices(self, language_code=None):
-		response = client.list_voices(language_code=language_code)
+		response = self.client.list_voices(language_code=language_code)
 		voices = sorted(response.voices, key=lambda voice: voice.name)
 
 		print (f"Voices: {len(voices)} ".center(60, "-"))
@@ -35,7 +35,7 @@ class GoogleVoice:
 			rate = voice.natural_sample_rate_hertz
 			print(f"{languages:<8} | {name:<24} | {gender:<8} | {rate:,} Hz")
 
-	def text_to_speech(self, text, name):	
+	def text_to_speech(self, voice_name, text, name):	
 		language_code = "-".join(voice_name.split("-")[:2])
 		text_input = texttospeech.SynthesisInput(text=text)
 		voice_params = texttospeech.VoiceSelectionParams(
@@ -45,7 +45,7 @@ class GoogleVoice:
 			audio_encoding=texttospeech.AudioEncoding.LINEAR16
 		)
 
-		response = client.synthesize_speech(
+		response = self.client.synthesize_speech(
 			input=text_input, voice=voice_params, audio_config=audio_config
 		)
 
@@ -58,3 +58,4 @@ if __name__=="__main__":
 	synthesizer = GoogleVoice()
 	synthesizer.list_languages()
 	synthesizer.list_voices("en")	
+	synthesizer.text_to_speech(input("Voice style: "), "My name is Vics, You're visual impairment companion system!", "response")

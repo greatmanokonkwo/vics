@@ -5,8 +5,8 @@ The engine then uses a text-to-speech module to say what was in the captured sce
 import cv2
 import asyncio
 
-from os import sys
-sys.path.append("..")
+import os
+os.sys.path.append("..")
 
 import numpy as np
 from devices.picam import picam
@@ -14,6 +14,10 @@ from devices.google_voice import GoogleVoice
 from detector import ObjectDetector
 
 import time # Take out
+
+import audiocore
+import board
+import audiobusio
 
 class SceneDescribeSystem:
 	
@@ -133,8 +137,18 @@ class SceneDescribeSystem:
 		#self.voice.text_to_speech(text=response, name="response")	
 
 		# Send generated audio file "response.wav" to speakers
+		response_wav = open("response.wav", "rb")
+		wav = audiocore.WaveFile(wave_file)	
+	
+		audio = audiobusio.I2SOut(board.D1, board.D0, board.D9)
+	
+		while True:
+			audio.play(wav)
+			while audio.playng:
+				pass
 
 		# Delete response.wav
+		os.remove("response.wav")
 		
 if __name__=="__main__":
 	system = SceneDescribeSystem()
