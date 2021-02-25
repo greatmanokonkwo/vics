@@ -15,13 +15,17 @@ class ReadingSystem:
 		pytesseract.pytesseract.tesseract_cmd = r"/usr/bin/tesseract"
 
 	def run(self):		
-		#img = self.cam.capture_image()
-		img = cv2.imread("test.png")
+		img = self.cam.capture_image()
+		#img = cv2.imread("test.png")
 		img_ = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
 		response = pytesseract.image_to_string(img_)
 		print(response)
 
+	def cleanup(self):
+		self.cam.cleanup()
+
 if __name__=="__main__":
 	system = ReadingSystem()
 	system.run()
+	system.cleanup()	

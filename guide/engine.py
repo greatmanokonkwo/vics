@@ -121,8 +121,12 @@ class GuideSystem:
 			GPIO.output(self.LEFT_BUZZER, 0)
 	
 		time.sleep(1)
+	
+	def cleanup():
+		self.cam.cleanup()	
 
 if __name__ == "__main__":
 	system = GuideSystem()
 	while True:
 		system.run()
+	system.cleanup()

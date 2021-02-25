@@ -137,16 +137,9 @@ class SceneDescribeSystem:
 		# Delete response.wav
 		
 if __name__=="__main__":
-<<<<<<< HEAD
-        system = SceneDescribeSystem()
-        start = time.time()
-        system.run()
-        system.cleanup()
-=======
 	system = SceneDescribeSystem()
 	start = time.time()
 	while True:
 		system.run()
 	system.cleanup()
->>>>>>> 40123858871a042057c849b5fa0efb01741afe86
 
