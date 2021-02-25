@@ -5,8 +5,8 @@ The engine then uses a text-to-speech module to say what was in the captured sce
 import cv2
 import asyncio
 
-from os import sys
-sys.path.append("..")
+import os
+os.sys.path.append("..")
 
 import numpy as np
 from devices.picam import picam
@@ -14,6 +14,8 @@ from devices.google_voice import GoogleVoice
 from detector import ObjectDetector
 
 import time # Take out
+
+from playsound import playsound
 
 class SceneDescribeSystem:
 	
@@ -24,10 +26,8 @@ class SceneDescribeSystem:
 		# Raspbery Pi Cam for taking 416x416 images of scenery
 		self.cam = picam(width=scene_size, height=scene_size)
 	
-		# Speakers
-
 		# Speech to text module
-		#self.voice = GoogleVoice()
+		self.voice = GoogleVoice()
 
 		# object detector
 		self.detector = ObjectDetector()
@@ -130,11 +130,15 @@ class SceneDescribeSystem:
 		print(response)
 		
 		# Turn generated response to speech
-		#self.voice.text_to_speech(text=response, name="response")	
+		self.voice.text_to_speech(voice_name="en-GB-Standard-B", text=response, name="response")	
 
 		# Send generated audio file "response.wav" to speakers
+		response_wav = open("response.wav", "rb")
+
+		playsound("response.wav") # play repsonse on speakers
 
 		# Delete response.wav
+		os.remove("response.wav")
 		
 if __name__=="__main__":
 	system = SceneDescribeSystem()

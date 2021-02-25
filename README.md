@@ -37,11 +37,17 @@ pip3 install --user --upgrade -r requirements.txt
 ### Google Cloud Text-to-Speech API key
 
 ```
-sudo snap install google-cloud-sdk
+wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-329.0.0-linux-x86_64.tar.gz
+tar -xvzf google-cloud-sdk-329.0.0-linux-x86_64.tar.gz
+./google-cloud-sdk/install.sh
+./google-cloud-sdk/bin/gcloud init
+gcloud auth list
+gcloud config list project
+gcloud services enable texttospeech.googleapis.com
 export PROJECT_ID=$(gcloud config get-value core/project)
-gcloud iam service-accounts create my-tts-sa --display-name "my tts service account"
 gcloud iam service-accounts keys create ~/key.json --iam-account my-tts-sa@${PROJECT_ID}.iam.gserviceaccount.com
-export GOOGLE_APPLICATION_CREDENTIALS=key.json
+export GOOGLE_APPLICATION_CREDENTIALS=~/key.json
+
 ```
 
 ### Google Tesseract-OCR Engine
