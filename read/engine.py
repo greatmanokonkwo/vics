@@ -16,7 +16,8 @@ class ReadingSystem:
 		pytesseract.pytesseract.tesseract_cmd = r"<fall_path_to_your_tesseract-executable>"
 
 	def run(self):		
-		img = self.cam.capture_image()
+		#img = self.cam.capture_image()
+		img = cv2.imread("test.png")	
 		img_ = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
 		response = pytesseract.image_to_string(img_)
