@@ -8,6 +8,7 @@ easydict
 smbus >= 1.1.post2
 playsound
 pytesseract
+imutils
 #Not for Jetson Nano
 #opencv-python >= 4.1.1
 #torch >= 1.7.0
