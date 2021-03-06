@@ -54,6 +54,7 @@ export GOOGLE_APPLICATION_CREDENTIALS=~/key.json
 ```
 sudo apt get install tesseract-ocr
 sudo apt-get install libjpeg8 libjpeg62-dev libfreetype6 libfreetype6-dev
+wget https://github.com/oyyd/frozen_east_text_detection.pb
 ```
 
 ### YOLOV3 weights file
