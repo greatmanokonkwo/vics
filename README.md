@@ -47,6 +47,7 @@ gcloud services enable texttospeech.googleapis.com
 export PROJECT_ID=$(gcloud config get-value core/project)
 gcloud iam service-accounts keys create ~/key.json --iam-account my-tts-sa@${PROJECT_ID}.iam.gserviceaccount.com
 export GOOGLE_APPLICATION_CREDENTIALS=~/key.json
+echo export GOOGLE_APPLICATION_CREDENTIALS=~/key.json > ~/.bashrc
 
 ```
 

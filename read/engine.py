@@ -20,7 +20,7 @@ class ReadingSystem:
 
 	def run(self):		
 		#img = self.cam.capture_image()
-		img = cv2.imread("test.png")
+		img = cv2.imread("test.jpg")
 		img_ = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
 		response = pytesseract.image_to_string(img_)
