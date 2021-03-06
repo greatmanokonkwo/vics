@@ -42,7 +42,7 @@ tar -xvzf google-cloud-sdk-329.0.0-linux-x86_64.tar.gz
 ./google-cloud-sdk/install.sh
 (Select mystical-ace-305717 project)
 ./google-cloud-sdk/bin/gcloud init
-(Restart terminal to get gcloud command working)
+source ~/.bashrc
 gcloud auth list
 gcloud config list project
 gcloud services enable texttospeech.googleapis.com
