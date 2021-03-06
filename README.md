@@ -37,11 +37,23 @@ pip3 install --user --upgrade -r requirements.txt
 ### Google Cloud Text-to-Speech API key
 
 ```
-sudo snap install google-cloud-sdk
+wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-329.0.0-linux-x86_64.tar.gz
+tar -xvzf google-cloud-sdk-329.0.0-linux-x86_64.tar.gz
+./google-cloud-sdk/install.sh
+./google-cloud-sdk/bin/gcloud init
+gcloud auth list
+gcloud config list project
+gcloud services enable texttospeech.googleapis.com
 export PROJECT_ID=$(gcloud config get-value core/project)
-gcloud iam service-accounts create my-tts-sa --display-name "my tts service account"
 gcloud iam service-accounts keys create ~/key.json --iam-account my-tts-sa@${PROJECT_ID}.iam.gserviceaccount.com
-export GOOGLE_APPLICATION_CREDENTIALS=key.json
+export GOOGLE_APPLICATION_CREDENTIALS=~/key.json
+
+```
+
+### Google Tesseract-OCR Engine
+```
+sudo apt get install tesseract-ocr
+sudo apt-get install libjpeg8 libjpeg62-dev libfreetype6 libfreetype6-dev
 ```
 
 ### YOLOV3 weights file
@@ -66,8 +78,8 @@ wget https://pjreddie.com/media/files/yolov3-tiny.weights
 - [x] Implement AlexNet architecture for Direction Planning (direction_plan/neuralnet/model.py) 
 - [x] Write training process for the Direction Planning System (direction_plan/neuralnet/train.py)
 - [x] Interface vibration motor for halt signalling (direction_plan/devices/vibrator_motor.py)
-- [ ] Finish up mpu6050 code to enable calculation of Yaw angle (direction_plan/devices/mpu6050.py)
-- [ ] Figure out halt signal calculations (direction_plan/collect_data.py)
+- [x] Finish up mpu6050 code to enable calculation of Yaw angle (direction_plan/devices/mpu6050.py)
+- [x] Figure out halt signal calculations (direction_plan/collect_data.py)
 - [x] Build direction_plan interfacing engine (direction_plan/engine.py)
 - [ ] Collect data (data such as stopping at cross walks and roads be very helpful)
 
@@ -83,17 +95,17 @@ wget https://pjreddie.com/media/files/yolov3-tiny.weights
 #### Sofware
 
 - [ ] Interface with microphone hardware
-- [ ] Interface with speaker hardware
-- [ ] Write object detection model 
+- [x] Interface with speaker hardware
+- [x] Write object detection model 
 - [ ] Build WakeWord model for AI voice assistant (wake word: "Hey VICS")
 - [ ] Build NLP model for taking in audio input and return a classification for the command issued
-- [ ] Using the detected objects find way to create voice responses with the detected objects
+- [x] Using the detected objects find way to create voice responses with the detected objects
 - [ ] Write data collection scripts
 
 #### Hardware
 
-- [ ] Electret Microphone Amplifier - MAX4466
-- [ ] Bone Conductor Transducer
+- [x] SPH0645LM4H MEMS Microphone
+- [x] MAX98357A Amflifier
 
 ### Product Design
 

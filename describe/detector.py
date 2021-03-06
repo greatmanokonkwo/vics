@@ -42,7 +42,7 @@ class ObjectDetector:
 			torch.cuda.synchronize() # Wait for GPU to complete inference operations
 		"""
 
-		pred = self.model(img_, self.CUDA)
+		pred = self.model(img_, False) #self.CUDA)
 		res = write_results(pred, self.confidence, self.num_classes) # only take the 4 corner coordinate points and class index
 
 		if type(res) != int:
