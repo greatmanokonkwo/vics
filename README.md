@@ -40,14 +40,15 @@ pip3 install --user --upgrade -r requirements.txt
 wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-329.0.0-linux-x86_64.tar.gz
 tar -xvzf google-cloud-sdk-329.0.0-linux-x86_64.tar.gz
 ./google-cloud-sdk/install.sh
+(Select mystical-ace-305717 project)
 ./google-cloud-sdk/bin/gcloud init
+(Restart terminal to get gcloud command working)
 gcloud auth list
 gcloud config list project
 gcloud services enable texttospeech.googleapis.com
 export PROJECT_ID=$(gcloud config get-value core/project)
 gcloud iam service-accounts keys create ~/key.json --iam-account my-tts-sa@${PROJECT_ID}.iam.gserviceaccount.com
 export GOOGLE_APPLICATION_CREDENTIALS=~/key.json
-
 ```
 
 ### Google Tesseract-OCR Engine
