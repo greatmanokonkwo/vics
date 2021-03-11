@@ -161,6 +161,7 @@ class ReadingSystem:
 			results.append(((startX, startY, endX, endY), text))
 	
 		results = sorted(results, key=lambda r:(r[0][1], r[0][0]))
+		print (results)
 		results = self.__sort_by_line(results)
 
 		results = sorted(results, key=lambda r:(r[0][1], r[0][0]))
