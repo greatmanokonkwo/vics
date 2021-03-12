@@ -292,6 +292,5 @@ if __name__=="__main__":
 	# Change the minutes to the how long you want to run the program for 
 	data_collection(mins=mins, path=data_path, fps=fps, sample=video_sample)
 
-	cam.cleanup()
-	
-
+	if capture_type == "live":
+		cam.cleanup()
