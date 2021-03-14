@@ -10,10 +10,9 @@ from devices.picam import picam
 from devices.google_voice import GoogleVoice
 
 from playsound import playsound
-from math import ceil
 
 class ReadingSystem:
-	def __init__(self, width=640, height=480, min_confidence=0.5, padding=0.05):
+	def __init__(self, width=, height=480, min_confidence=0.5, padding=0.05):
 		self.width = width
 		self.height = height
 		self.min_confidence = min_confidence
@@ -83,7 +82,7 @@ class ReadingSystem:
 	def run(self):		
 		# capture the input image that contains text to be read
 		#img = self.cam.capture_image()
-		img = cv2.imread("test.png")	
+		img = cv2.imread("test.jpg")	
 		orig = img.copy()
 		origH, origW = img.shape[:2]
 		

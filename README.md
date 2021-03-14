@@ -31,6 +31,7 @@ cd ../
 
 ### pip install packages
 ```
+sudo apt-get install portaudio19-dev
 pip3 install --user --upgrade -r requirements.txt
 ```
 
@@ -49,6 +50,11 @@ gcloud services enable texttospeech.googleapis.com
 echo "export PROJECT_ID=$(gcloud config get-value core/project)" > ~/.bashrc
 gcloud iam service-accounts keys create ~/key.json --iam-account my-tts-sa@${PROJECT_ID}.iam.gserviceaccount.com
 export GOOGLE_APPLICATION_CREDENTIALS=~/key.json
+<<<<<<< HEAD
+echo export GOOGLE_APPLICATION_CREDENTIALS=~/key.json > ~/.bashrc
+
+=======
+>>>>>>> 6bf3cdf48e91dc832ffe5f2814dabd1478140d94
 ```
 
 ### Google Tesseract-OCR Engine
