@@ -117,8 +117,11 @@ def calculate_yaw(currTime):
 	return currTime
 
 # Data collection process	
-def data_collection(mins, path):
+def data_collection(mins, path, fps, sample):
 	global prevTime_yaw, prevTime_vel
+
+	# Creating a VideoCapture object to read the video
+	cap = cv2.VideoCapture(sample)
 
 	# Get the ID of the last processed data sample
 	with open(path+"/last.txt") as f:
@@ -146,7 +149,8 @@ def data_collection(mins, path):
 
 	currTime = time.time()
 	# Loop until specified minutes have elasped
-	while time.time() - START_TIME < mins*60:
+	#while time.time() - START_TIME < mins*60:
+	while (cap.isOpened()):
 		imu.readSensor()
 		currTime = calculate_yaw(currTime)
 
@@ -158,10 +162,17 @@ def data_collection(mins, path):
 			interval_start = newTime
 			continue
 			
-		# Take image at the start of new movement interval
+		# Take a frame from each second of the video
 		if new_interval:
 			new_interval = False
-			img_ = cam.capture_image()
+			#img_ = cam.capture_image()
+
+			for i in range(fps):
+				ret, frame = cap.read()
+				cv2.imshow("Video", frame)
+				
+			ret, img_ = cap.read()
+			img_ = cv2.resize(frame, (416, 416), fx=0, fy=0, interpolation = cv2.INTER_CUBIC)
 
 		# Calculate maximum accelorometer value on the z-axis
 		max_accel = max(imu.AccelVals[2], max_accel)
@@ -172,20 +183,9 @@ def data_collection(mins, path):
 		if abs(angle) > abs(max_angle):
 			max_angle = angle
 				
-		# Save the image as well as the motion in format direct_class/id_angle.jpg
+		# Save he image as well as the motion in format direct_class/id_angle.jpg
 		if newTime - interval_start >= UPDATE_TIME:
 
-<<<<<<< HEAD
-                        halt = 0
-                        if (max_accel - midline) < thresh:
-                            direct_class = 9 # Halt was detected
-                            halt = 1
-                        else:
-                            direct_class = get_direction_class(max_angle)
-
-			if direct_class != -1:
-				#cam.save_image(path=(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg"), img=img_)
-=======
 			halt = 0
 			if (max_accel - MIDLINE) < THRESH:
 				direct_class = 9 # Halt was detected
@@ -194,9 +194,11 @@ def data_collection(mins, path):
 				direct_class = get_direction_class(max_angle)
 
 			if direct_class != -1:
-				cam.save_image(path=(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg"), img=img_)
+				# Save image and direction pair
+				#cam.save_image(path=(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg"), img=img_)
+				
+				
 				# Test out the angle, stop and direction class values. For max_accel if you are walking it should be 0 and if you stop it should be 1
->>>>>>> fdf89096b37b13502fff327fb9b941e7edcae50a
 				print(max_angle, halt, direct_class)
 			else:
 				print("Invalid movement direction")
@@ -218,11 +220,14 @@ def data_collection(mins, path):
 
 if __name__=="__main__":
 	data_path = str(input("Where should the dataset be stored (The path should contain a last.txt file and an images directory):"))
+	video_sample = str(input("Path of your video data sample: "))
+	fps = int(input("What is the fps of the video? "))
+
 	initialize_devices()
 
 	print ("Get set up. Data collection will start in 30 seconds.")
 	# Give time handle any setups to get collector ready to start taking in data
 	time.sleep(0)
 	# Change the minutes to the how long you want to run the program for 
-	data_collection(mins=2, path=data_path)
+	data_collection(mins=2, path=data_path, fps=fps, sample=video_sample)
 	cam.cleanup()

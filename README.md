@@ -40,21 +40,27 @@ pip3 install --user --upgrade -r requirements.txt
 wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-329.0.0-linux-x86_64.tar.gz
 tar -xvzf google-cloud-sdk-329.0.0-linux-x86_64.tar.gz
 ./google-cloud-sdk/install.sh
+(Select mystical-ace-305717 project)
 ./google-cloud-sdk/bin/gcloud init
+source ~/.bashrc
 gcloud auth list
 gcloud config list project
 gcloud services enable texttospeech.googleapis.com
 export PROJECT_ID=$(gcloud config get-value core/project)
 gcloud iam service-accounts keys create ~/key.json --iam-account my-tts-sa@${PROJECT_ID}.iam.gserviceaccount.com
 export GOOGLE_APPLICATION_CREDENTIALS=~/key.json
+<<<<<<< HEAD
 echo export GOOGLE_APPLICATION_CREDENTIALS=~/key.json > ~/.bashrc
 
+=======
+>>>>>>> 6bf3cdf48e91dc832ffe5f2814dabd1478140d94
 ```
 
 ### Google Tesseract-OCR Engine
 ```
 sudo apt get install tesseract-ocr
 sudo apt-get install libjpeg8 libjpeg62-dev libfreetype6 libfreetype6-dev
+wget https://github.com/ZER-0-NE/EAST-Detector-for-text-detection-using-OpenCV/blob/master/frozen_east_text_detection.pb
 ```
 
 ### YOLOV3 weights file
