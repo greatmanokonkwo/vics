@@ -31,6 +31,7 @@ cd ../
 
 ### pip install packages
 ```
+sudo apt-get install portaudio19-dev
 pip3 install --user --upgrade -r requirements.txt
 ```
 
@@ -46,7 +47,7 @@ source ~/.bashrc
 gcloud auth list
 gcloud config list project
 gcloud services enable texttospeech.googleapis.com
-export PROJECT_ID=$(gcloud config get-value core/project)
+echo "export PROJECT_ID=$(gcloud config get-value core/project)" > ~/.bashrc
 gcloud iam service-accounts keys create ~/key.json --iam-account my-tts-sa@${PROJECT_ID}.iam.gserviceaccount.com
 export GOOGLE_APPLICATION_CREDENTIALS=~/key.json
 <<<<<<< HEAD
