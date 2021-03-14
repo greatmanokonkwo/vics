@@ -47,9 +47,11 @@ import smbus
 from imusensor.MPU9250 import MPU9250
 from imusensor.filters import madgwick
 
-from devices.picam import picam
+##
+# from devices.picam import picam (For live collection)
+##
 
-# UPDATE TIMER vARAIBLE
+# UPDATE TIMER VARAIBLE
 UPDATE_TIME = 1
 MIDLINE = -9.8
 THRESH = 0.6
@@ -59,16 +61,19 @@ sensorfusion = madgwick.Madgwick()
 imu = None 
 
 # Raspberry Pi Camera V2
-cam = None
+cam = None 
+
+capture_type = None # The script can either collect image data from live camera feed or prerecorded and saved video data
 
 initial_yaw = 0
 
 def initialize_devices(width=256, height=256):
 	global imu
-	global cam
 
-	cam = picam(width, height)
-
+	if capture_type == "live":
+		global cam 
+		cam = picam(width, height)
+	
 	# Initialize MPU-6050 device
 	address = 0x68
 	bus = smbus.SMBus(1)
@@ -129,7 +134,7 @@ def data_collection(mins, path, fps, sample):
 
 	START_TIME = time.time()	
 
-	img_ = None
+	img = None
 
 	# Yaw calculation variables
 	prev_yaw = 0
@@ -143,91 +148,149 @@ def data_collection(mins, path, fps, sample):
 	thresh = 0.6
 	max_accel = -999	
 
-	interval_start = START_TIME
-	new_interval = True
-
-
 	currTime = time.time()
+
 	# Loop until specified minutes have elasped
-	#while time.time() - START_TIME < mins*60:
-	while (cap.isOpened()):
-		imu.readSensor()
-		currTime = calculate_yaw(currTime)
 
-		newTime = time.time()
+	if capture_type == "live":
+		
+		interval_start = START_TIME
+		new_interval = True
 
-		# The sensor fusion algorithm spends the first few seconds of calculations slightly off. In order not the take this off values as are starting values we retake the initial_yaw for the first five seconds
-		if newTime - START_TIME < 12.5:
-			initial_yaw = sensorfusion.yaw
-			interval_start = newTime
-			continue
+		while time.time() - START_TIME < mins*60:
+
+			imu.readSensor()
+			currTime = calculate_yaw(currTime)
+
+			newTime = time.time()
+
+			# The sensor fusion algorithm spends the first few seconds of calculations slightly off. In order not the take this off values as are starting values we retake the initial_yaw for the first five seconds
+			if newTime - START_TIME < 12.5:
+				initial_yaw = sensorfusion.yaw
+				interval_start = newTime
+				continue
 			
-		# Take a frame from each second of the video
-		if new_interval:
-			new_interval = False
-			#img_ = cam.capture_image()
-
-			for i in range(fps):
-				ret, frame = cap.read()
-				cv2.imshow("Video", frame)
+			# Take a frame from each second of the video
+			if new_interval:
+				new_interval = False
+				img = cam.capture_image()
 				
-			ret, img_ = cap.read()
-			img_ = cv2.resize(frame, (416, 416), fx=0, fy=0, interpolation = cv2.INTER_CUBIC)
+			# Calculate maximum accelorometer value on the z-axis
+			max_accel = max(imu.AccelVals[2], max_accel)
 
-		# Calculate maximum accelorometer value on the z-axis
-		max_accel = max(imu.AccelVals[2], max_accel)
+			yaw_angle = -(sensorfusion.yaw - initial_yaw) # The magnetometer measures heading from the earth's true north, we need to set the user's initial heading as the reference point
+			angle = int(yaw_angle - prev_yaw) # The displacement angle is the (yaw angle) - (previous yaw angle)
 
-		yaw_angle = -(sensorfusion.yaw - initial_yaw) # The magnetometer measures heading from the earth's true north, we need to set the user's initial heading as the reference point
-		angle = int(yaw_angle - prev_yaw) # The displacement angle is the (yaw angle) - (previous yaw angle)
-
-		if abs(angle) > abs(max_angle):
-			max_angle = angle
+			if abs(angle) > abs(max_angle):
+				max_angle = angle
 				
-		# Save he image as well as the motion in format direct_class/id_angle.jpg
-		if newTime - interval_start >= UPDATE_TIME:
+			# Save he image as well as the motion in format direct_class/id_angle.jpg
+			if newTime - interval_start >= UPDATE_TIME:
 
-			halt = 0
-			if (max_accel - MIDLINE) < THRESH:
-				direct_class = 9 # Halt was detected
-				halt = 1
-			else:
-				direct_class = get_direction_class(max_angle)
+				halt = 0
+				if (max_accel - MIDLINE) < THRESH:
+					direct_class = 9 # Halt was detected
+					halt = 1
+				else:
+					direct_class = get_direction_class(max_angle)
 
-			if direct_class != -1:
-				# Save image and direction pair
-				#cam.save_image(path=(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg"), img=img_)
-				
-				
-				# Test out the angle, stop and direction class values. For max_accel if you are walking it should be 0 and if you stop it should be 1
-				print(max_angle, halt, direct_class)
-			else:
-				print("Invalid movement direction")
+				if direct_class != -1:
+					# Save image and direction pair
+					cam.save_image(path=(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg"), img=img)
+								
+					# Test out the angle, stop and direction class values. For max_accel if you are walking it should be 0 and if you stop it should be 1
+					print(max_angle, halt, direct_class)
+				else:
+					print("Invalid movement direction")
 
-			max_angle = 0
-			max_halt = 0
-			prev_yaw = -(sensorfusion.yaw - initial_yaw)
+				max_angle = 0
+				max_halt = 0
+				prev_yaw = -(sensorfusion.yaw - initial_yaw)
 	
-			max_accel = -999
+				max_accel = -999
 			
-			interval_start = time.time()
-			new_interval = True
+				interval_start = time.time()
+				new_interval = True
 
-			count+=1
+				count+=1
+
+	else:	
+	
+		fps_counter = 0
+
+		while (cap.isOpened()):
+
+			imu.readSensor()
+			currTime = calculate_yaw(currTime)
+
+			# The sensor fusion algorithm spends the first few seconds of calculations slightly off. In order not the take this off values as are starting values we retake the initial_yaw for the first five seconds
+			if time.time() - START_TIME < 12.5:
+				initial_yaw = sensorfusion.yaw
+				continue
+
+			# Collect a frame each time in the loop	
+			ret, frame = cap.read()
+			cv2.imshow("Video", frame)
+		
+			# Calculate maximum accelorometer value on the z-axis
+			max_accel = max(imu.AccelVals[2], max_accel)
+
+			yaw_angle = -(sensorfusion.yaw - initial_yaw) # The magnetometer measures heading from the earth's true north, we need to set the user's initial heading as the reference point
+			angle = int(yaw_angle - prev_yaw) # The displacement angle is the (yaw angle) - (previous yaw angle)
+
+			if abs(angle) > abs(max_angle):
+				max_angle = angle
+				
+			# Save he image as well as the motion in format direct_class/id_angle.jpg
+			if fps_counter >= fps:
+				fps_counter = 0
+				img = cv2.resize(frame, (416, 416), fx=0, fy=0, interpolation = cv2.INTER_CUBIC)
+
+				halt = 0
+				if (max_accel - MIDLINE) < THRESH:
+					direct_class = 9 # Halt was detected
+					halt = 1
+				else:
+					direct_class = get_direction_class(max_angle)
+
+				if direct_class != -1:
+					# Save image and direction pair
+					cv2.imwrite((path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg"), img)
+								
+					# Test out the angle, stop and direction class values. For max_accel if you are walking it should be 0 and if you stop it should be 1
+					print(max_angle, halt, direct_class)
+				else:
+					print("Invalid movement direction")
+
+				max_angle = 0
+				max_halt = 0
+				prev_yaw = -(sensorfusion.yaw - initial_yaw)
+	
+				max_accel = -999
+			
+				count+=1
 
 	# Update the start.txt file with ID of lastest processed data sample
 	with open(path+"/last.txt", "w") as f:
 		f.write(str(count))
 
 if __name__=="__main__":
-	data_path = str(input("Where should the dataset be stored (The path should contain a last.txt file and an images directory):"))
-	video_sample = str(input("Path of your video data sample: "))
-	fps = int(input("What is the fps of the video? "))
+	data_path = str(input("Where should the dataset be stored (The path should contain a last.txt file and an images directory): "))
+	capture_type = str(input("Is the data coming from a live camera feed or a prerecorded video? (live or video): ")).lower()
 
+	if capture_type == "live":
+		mins = float(input("How long should the collection script run (in mins): "))
+	else:
+		video_sample = str(input("Path of your video data sample: "))
+		fps = int(input("What is the fps of the video? "))
+	
 	initialize_devices()
 
 	print ("Get set up. Data collection will start in 30 seconds.")
 	# Give time handle any setups to get collector ready to start taking in data
-	time.sleep(0)
+	time.sleep(30)
 	# Change the minutes to the how long you want to run the program for 
-	data_collection(mins=2, path=data_path, fps=fps, sample=video_sample)
-	cam.cleanup()
+	data_collection(mins=mins, path=data_path, fps=fps, sample=video_sample)
+
+	if capture_type == "live":
+		cam.cleanup()
