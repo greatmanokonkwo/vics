@@ -31,6 +31,7 @@ cd ../
 
 ### pip install packages
 ```
+sudo apt-get install portaudio19-dev
 pip3 install --user --upgrade -r requirements.txt
 ```
 
