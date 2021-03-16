@@ -5,7 +5,7 @@ Left buzzer ON (continous) - Turn left by required degrees
 Right buzzer ON (continous) - Turn right by the required degrees
 Left and Right buzzer ON (4 secs) - Stop!
 """
-import sys.os
+import os.sys
 sys.path.append("..")
 
 import time
