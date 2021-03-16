@@ -102,7 +102,7 @@ wget https://pjreddie.com/media/files/yolov3-tiny.weights
 
 #### Sofware
 
-- [ ] Interface with microphone hardware
+- [x] Interface with microphone hardware
 - [x] Interface with speaker hardware
 - [x] Write object detection model 
 - [ ] Build WakeWord model for AI voice assistant (wake word: "Hey VICS")
