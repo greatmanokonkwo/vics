@@ -102,13 +102,13 @@ wget https://pjreddie.com/media/files/yolov3-tiny.weights
 
 #### Sofware
 
-- [ ] Interface with microphone hardware
+- [x] Interface with microphone hardware
 - [x] Interface with speaker hardware
 - [x] Write object detection model 
 - [ ] Build WakeWord model for AI voice assistant (wake word: "Hey VICS")
 - [ ] Build NLP model for taking in audio input and return a classification for the command issued
 - [x] Using the detected objects find way to create voice responses with the detected objects
-- [ ] Write data collection scripts
+- [x] Write data collection scripts
 
 #### Hardware
 
@@ -119,12 +119,12 @@ wget https://pjreddie.com/media/files/yolov3-tiny.weights
 
 #### Software
 
-- [ ] Design CAD for Enclosure using Fusion 360
+- [x] Design CAD for Enclosure using FreeCAD
 
 #### Hardware
 
-- [ ] Create chest mount straps
-- [ ] 3d print Enclosure
+- [x] Create chest mount straps
+- [x] 3d print Enclosure
 
 ## Vision and Purpose
 
