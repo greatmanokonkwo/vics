@@ -5,8 +5,8 @@ from torch import optim
 from torch.utils.data import DataLoader
 from torchvision import transforms
 import torch.nn as nn
-from dataset import MotionDataset
-from GuideCNN import GuideCNN
+from dataset import CommandsDataset
+from audiocnn import AudioCNN
 	
 device = (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
 
@@ -63,7 +63,7 @@ if __name__ == "__main__":
 	n_epochs = int(input("Number of epochs: "))
 
 	# create dataset from the dataset/images directory with a format (img, angle, halt_signal)
-	data_path = str(input("Please specify the location of the GuideNet dataset:"))
+	data_path = str(input("Please specify the location of the AudioCNN dataset:"))
 	dataset = MotionDataset(data_path, transform=transforms.ToTensor())
 
 	# Split the dataset
