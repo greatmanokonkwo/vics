@@ -48,7 +48,7 @@ from imusensor.MPU9250 import MPU9250
 from imusensor.filters import madgwick
 
 ##
-# from devices.picam import picam (For live collection)
+# from devs_and_utils.picam import picam (For live collection)
 ##
 
 # UPDATE TIMER VARAIBLE

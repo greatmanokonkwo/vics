@@ -6,8 +6,8 @@ import numpy as np
 import pytesseract
 import cv2
 
-from devices.picam import picam
-from devices.google_voice import GoogleVoice
+from devs_and_utils.picam import picam
+from devs_and_utils.google_voice import GoogleVoice
 
 from playsound import playsound
 

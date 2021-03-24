@@ -11,7 +11,7 @@ def main(args):
         chunks = make_chunks(audio, length)
         names = []
         for i, chunk in enumerate(chunks):
-            _name = file.split("/")[-1]
+           _name = file.split("/")[-1]
             name = "{}_{}".format(i, _name)
             wav_path = os.path.join(args.save_path, name)
             chunk.export(wav_path, format="wav")

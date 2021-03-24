@@ -79,8 +79,8 @@ if __name__ == "__main__":
 	val_loader = DataLoader(dataset[val_indices], batch_size=bs, shuffle=True)
 
 	# Load model	
-	model = GuideNet().to(device=device)
-	model_path = os.getcwd() + "/guide_net.pt"
+	model = GuideCNN().to(device=device)
+	model_path = os.getcwd() + "/guidecnn_weights.pt"
 
 	if os.path.exists(model_path):
 		model.load_state_dict(torch.load(model_path))

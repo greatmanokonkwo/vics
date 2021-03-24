@@ -9,8 +9,8 @@ import os
 os.sys.path.append("..")
 
 import numpy as np
-from devices.picam import picam
-from devices.google_voice import GoogleVoice
+from devs_and_utils.picam import picam
+from devs_and_utils.google_voice import GoogleVoice
 from detector import ObjectDetector
 
 import time # Take out

@@ -28,11 +28,11 @@ def training_loop(n_epochs, optimizer, model, loss_fn, train_loader, val_loader)
 		loss_val = 0.0
 
 		# Calculate loss for the training set and backpropagate
-		for imgs, classes in train_loader:
-			imgs = imgs.to(device=device)
+		for mfccs, classes in train_loader:
+			mfccs = mfccs.to(device=device)
 			classes = classes.to(device=device)
 				
-			outputs = model(imgs)
+			outputs = model(mfccs)
 			loss = loss_fn(outputs, classes)	
 
 			optimizer.zero_grad()
@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
 	# create dataset from the dataset/images directory with a format (img, angle, halt_signal)
 	data_path = str(input("Please specify the location of the AudioCNN dataset:"))
-	dataset = MotionDataset(data_path, transform=transforms.ToTensor())
+	dataset = CommandsDataset(data_path)
 
 	# Split the dataset
 	n_samples = len(dataset)
@@ -79,8 +79,8 @@ if __name__ == "__main__":
 	val_loader = DataLoader(dataset[val_indices], batch_size=bs, shuffle=True)
 
 	# Load model	
-	model = GuideNet().to(device=device)
-	model_path = os.getcwd() + "/guide_net.pt"
+	model = AudioCNN().to(device=device)
+	model_path = os.getcwd() + "/audiocnn_weights.pt"
 
 	if os.path.exists(model_path):
 		model.load_state_dict(torch.load(model_path))

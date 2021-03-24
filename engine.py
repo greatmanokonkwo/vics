@@ -2,12 +2,10 @@ import requests
 import Jetson.GPIO as GPIO
 
 from wakeword.engine import WakeWordProcessor
-from command_process.engine import CommandProcessor
+from command_processor.engine import CommandProcessor
 from guide.engine import GuideSystem
 from describe.engine import SceneDescribeSystem 
-from read.engine import ImageReadingSystem
-
-
+from read.engine import ReadingSystem
 
 
 """

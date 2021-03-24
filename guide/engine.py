@@ -18,7 +18,7 @@ from torchvision import transforms
 from imusensor.MPU9250 import MPU9250
 from imusensor.filters import kalman
 
-from devices.picam import picam
+from devs_and_utils.picam import picam
 from neuralnet.GuideNet import GuideNet
 
 class GuideSystem:
