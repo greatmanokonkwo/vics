@@ -1,7 +1,4 @@
 """download and/or process data"""
-import os.sys
-sys.path.append("../..")
-
 import torch
 import torch.nn as nn
 import torchaudio
@@ -31,7 +28,7 @@ class WakeWordData(torch.utils.data.Dataset):
 
 		try:    
 			file_path = self.data.key.iloc[idx]
-			waveform, sr = torchaudio.load(file_path, normalization=False)
+			waveform, sr = torchaudio.load(file_path)
 			if sr > self.sr:
 				waveform = torchaudio.transforms.Resample(sr, self.sr)(waveform)
 			mfcc = self.audio_transform(waveform)
