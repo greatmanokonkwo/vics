@@ -35,7 +35,7 @@ class GoogleVoice:
 			rate = voice.natural_sample_rate_hertz
 			print(f"{languages:<8} | {name:<24} | {gender:<8} | {rate:,} Hz")
 
-	def text_to_speech(self, voice_name, text, name):	
+	def text_to_speech(self, text, name, voice_name="en-GB-Wavenet-B"):	
 		language_code = "-".join(voice_name.split("-")[:2])
 		text_input = texttospeech.SynthesisInput(text=text)
 		voice_params = texttospeech.VoiceSelectionParams(
