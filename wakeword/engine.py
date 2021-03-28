@@ -12,6 +12,7 @@ import torch
 import numpy as np
 from neuralnet.dataset import get_featurizer
 from threading import Event
+from playsound import playsound
 
 from devs_and_utils.listener import Listener
 
