@@ -1,8 +1,8 @@
 import os
 import sys
 import time
-import smbus
-import numpy as np
+import smbus 
+import numpy as np 
 
 from imusensor.MPU9250 import MPU9250
 from imusensor.filters import madgwick
@@ -14,7 +14,7 @@ bus = smbus.SMBus(1)
 imu = MPU9250.MPU9250(bus, address)
 imu.begin()
 
-calib_file = "/home/greatman/code/vics/devices/calib.json"
+calib_file = "calib.json"
 
 imu.loadCalibDataFromFile(calib_file)	
 
@@ -26,6 +26,7 @@ time_cnt = 0
 start_time = time.time()
 initial_yaw = 0
 
+"""
 # Sensor fusion testing for getting angles
 while True:
 
@@ -72,4 +73,3 @@ while True:
 		max_val = -999
 
 		currTime = newTime
-"""

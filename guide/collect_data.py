@@ -41,18 +41,17 @@ WHAT TO DO:
 import os
 os.sys.path.append("..")
 
+import cv2
 import time
 import smbus
 
 from imusensor.MPU9250 import MPU9250
 from imusensor.filters import madgwick
 
-##
-# from devs_and_utils.picam import picam (For live collection)
-##
+from devs_and_utils.picam import picam 
 
 # UPDATE TIMER VARAIBLE
-UPDATE_TIME = 1
+UPDATE_TIME = 2
 MIDLINE = -9.8
 THRESH = 0.6
 
@@ -80,32 +79,26 @@ def initialize_devices(width=256, height=256):
 	imu = MPU9250.MPU9250(bus, address)
 	imu.begin()
 	
-	calib_file = "../devices/calib.json" # path of caliberation file with caliberated values
+	calib_file = "../devs_and_utils/calib.json" # path of caliberation file with caliberated values
 
 	if os.path.exists(calib_file):	
 		imu.loadCalibDataFromFile(calib_file)
+	else:
+		print("Unable to find IMU caliberation file")
 
 # Classify a given angle in degrees as one of the 9 direction classes
 # [-PI/2, -3PI/8, -PI/4, -PI/8, 0, PI/8, PI/4, 3PI/8, PI/2]
 def get_direction_class(angle):
-	if (angle < -78.75) & (angle >= -101.25):
+	if (angle < -67.5) & (angle >= -112.5):
 		return 0
-	elif (angle < -56.25) & (angle >= -78.75):
+	elif (angle < -22.5) & (angle >= -67.5):
 		return 1
-	elif (angle < -33.75) & (angle >= -56.25):
+	elif (angle < 22.5) & (angle >= -22.5):
 		return 2
-	elif (angle < -11.25) & (angle >= -33.75):
+	elif (angle < 67.5) & (angle >= 22.5):
 		return 3
-	elif (angle < 11.25) & (angle >= -11.25):
+	elif (angle < 112.5) & (angle >= 67.5):
 		return 4
-	elif (angle < 33.75) & (angle >= 11.25):
-		return 5
-	elif (angle < 56.25) & (angle >= 33.75):
-		return 6
-	elif (angle < 78.75) & (angle >= 56.25):
-		return 7
-	elif (angle <= 101.25) & (angle >= 78.75):
-		return 8
 	else:
 		return -1
 		
@@ -189,7 +182,7 @@ def data_collection(mins, path, fps, sample):
 
 				halt = 0
 				if (max_accel - MIDLINE) < THRESH:
-					direct_class = 9 # Halt was detected
+					direct_class = 5 # Halt was detected
 					halt = 1
 				else:
 					direct_class = get_direction_class(max_angle)
@@ -199,7 +192,7 @@ def data_collection(mins, path, fps, sample):
 					cam.save_image(path=(path+"/"+str(direct_class)+"/"+str(count)+"_"+str(max_angle)+".jpg"), img=img)
 								
 					# Test out the angle, stop and direction class values. For max_accel if you are walking it should be 0 and if you stop it should be 1
-					print(max_angle, halt, direct_class)
+					print(max_angle, halt, direct_class, yaw_angle, prev_yaw)
 				else:
 					print("Invalid movement direction")
 
@@ -278,6 +271,10 @@ if __name__=="__main__":
 	data_path = str(input("Where should the dataset be stored (The path should contain a last.txt file and an images directory): "))
 	capture_type = str(input("Is the data coming from a live camera feed or a prerecorded video? (live or video): ")).lower()
 
+	mins = None
+	fps = None
+	video_sample = None
+
 	if capture_type == "live":
 		mins = float(input("How long should the collection script run (in mins): "))
 	else:
@@ -288,7 +285,7 @@ if __name__=="__main__":
 
 	print ("Get set up. Data collection will start in 30 seconds.")
 	# Give time handle any setups to get collector ready to start taking in data
-	time.sleep(30)
+	# time.sleep(30)
 	# Change the minutes to the how long you want to run the program for 
 	data_collection(mins=mins, path=data_path, fps=fps, sample=video_sample)
 

@@ -39,7 +39,6 @@ class picam:
 		self.cam.release()
 
 if __name__=="__main__":
-	cam = picam(width=416, height=416)
-	input("Hit enter to take and save test image: ")
-	cam.save_image("test.jpg")
+	cam = picam(width=2048, height=1024)
+	cam.save_image(input("Name of image: "))
 	cam.cleanup()

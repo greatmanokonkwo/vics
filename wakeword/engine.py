@@ -13,7 +13,7 @@ import numpy as np
 from neuralnet.dataset import get_featurizer
 from threading import Event
 
-from devices.listener import Listener
+from devs_and_utils.listener import Listener
 
 
 class WakeWordEngine:
@@ -82,20 +82,10 @@ class DemoAction:
         # importing unecessary modules during production usage
         import os
         import subprocess
-        import random
-        from os.path import join, realpath
 
-        self.random = random
-        self.subprocess = subprocess
         self.detect_in_row = 0
 
         self.sensitivity = sensitivity
-        folder = realpath(join(realpath(__file__), '..', '..', '..', 'fun', 'arnold_audio'))
-        self.arnold_mp3 = [
-            os.path.join(folder, x)
-            for x in os.listdir(folder)
-            if ".wav" in x
-        ]
 
     def __call__(self, prediction):
         if prediction == 1:
@@ -107,13 +97,8 @@ class DemoAction:
             self.detect_in_row = 0
 
     def play(self):
-        filename = self.random.choice(self.arnold_mp3)
-        try:
-            print("playing", filename)
-            self.subprocess.check_output(['play', '-v', '.1', filename])
-        except Exception as e:
-            print(str(e))
-
+		playsound("/home/greatman/code/vics/devs_and_utils/presets/greet.wav")
+		
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="demoing the wakeword engine")

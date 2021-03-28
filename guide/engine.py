@@ -23,8 +23,8 @@ from neuralnet.GuideNet import GuideNet
 
 class GuideSystem:
 	# GPIO pins for the two information relay vibration motors
-	LEFT_BUZZER = 35
-	RIGHT_BUZZER = 7
+	LEFT_BUZZER = 23
+	RIGHT_BUZZER = 11
 
 	def __init__(self):
 		# The Raspberry Pi Camera V2 for taking images 
@@ -70,17 +70,14 @@ class GuideSystem:
 
 	# The formula to calculate the range of the direction class is: (class*PI/8 - PI/2) +- PI/16
 	def __get_direction_class_range(self, direct_class):
-		class_angle = direct_class*22.5 - 90
-		return (class_angle - 11.25, class_angle + 11.25)
+		class_angle = direct_class*45 - 90
+		return (class_angle - 22.5, class_angle + 22.25)
 
 	def run(self):
-		"""
 		# Collect image and run inference
 		self.cam.save_image("captured.jpg")
 		img = self.tensor(Image.open("capture.jpg"))
 		direct_class = self.model(img.unsqueeze(0))[0]
-		"""
-		direct_class = 7
 
 		# if halt signal is not inferred run direction signalling, else run halt signalling
 		if direct_class != 9:
