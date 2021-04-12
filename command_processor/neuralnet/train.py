@@ -40,8 +40,6 @@ def test(test_loader, model, device, epoch):
     with torch.no_grad():
         for idx, (mfcc, label) in enumerate(test_loader):
             mfcc, label = mfcc.to(device), label.to(device)
-            print(mfcc)
-            print(mfcc.shape)
             output = model(mfcc)[0]
             _, pred = torch.max(torch.sigmoid(output), dim=1)
             acc = binary_accuracy(pred, label)
@@ -138,7 +136,7 @@ def main(args):
             best_test_acc = test_acc
 
         # saves checkpoint if metrics are better than last
-        if args.save_checkpoint_path and test_acc >= best_test_acc:
+        if args.save_checkpoint_path and train_acc >= best_train_acc:
             checkpoint_path = os.path.join(args.save_checkpoint_path, args.model_name + ".pt")
             print("found best checkpoint. saving model as", checkpoint_path)
             save_checkpoint(
