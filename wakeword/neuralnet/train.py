@@ -110,13 +110,14 @@ def main(args):
 
     model = LSTMWakeWord(**model_params, device=device)
     params_path = "wakeword.pt"
-	
+    optimizer = optim.AdamW(model.parameters(), lr=args.lr)
+
     if os.path.exists(params_path):
         print("Loading model weights from last checkpoint")
         model.load_state_dict(torch.load(params_path)["model_state_dict"])
+        optimizer.load_state_dict(torch.load(params_path)["optimizer_state_dict"])
 
     model = model.to(device)
-    optimizer = optim.AdamW(model.parameters(), lr=args.lr)
     loss_fn = nn.BCEWithLogitsLoss()
 
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=2)
@@ -124,6 +125,11 @@ def main(args):
     best_train_acc, best_train_report = 0, None
     best_test_acc, best_test_report = 0, None
     best_epoch = 0
+
+    best_test_acc, test_report = test(test_loader, model, device, -1)
+    print(test_report)
+    print()
+
     for epoch in range(args.epochs):
         print("\nstarting training with learning rate", optimizer.param_groups[0]['lr'])
         train_acc, train_report = train(train_loader, model, optimizer, loss_fn, device, epoch)
@@ -171,7 +177,7 @@ if __name__ == "__main__":
     parser.add_argument('--epochs', type=int, default=100, help='epoch size')
     parser.add_argument('--batch_size', type=int, default=32, help='size of batch')
     parser.add_argument('--eval_batch_size', type=int, default=32, help='size of batch')
-    parser.add_argument('--lr', type=float, default=5e-5, help='learning rate')
+    parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
     parser.add_argument('--model_name', type=str, default="wakeword", required=False, help='name of model to save')
     parser.add_argument('--save_checkpoint_path', type=str, default=None, help='Path to save the best checkpoint')
     parser.add_argument('--train_data_json', type=str, default=None, required=True, help='path to train data json file')
