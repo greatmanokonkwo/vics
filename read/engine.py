@@ -12,7 +12,7 @@ from devs_and_utils.google_voice import GoogleVoice
 from playsound import playsound
 
 class ReadingSystem:
-	def __init__(self, width=, height=480, min_confidence=0.5, padding=0.05):
+	def __init__(self, width=928, height=928, min_confidence=0.5, padding=0.05):
 		self.width = width
 		self.height = height
 		self.min_confidence = min_confidence
@@ -20,7 +20,7 @@ class ReadingSystem:
 
 		# Raspberry Pi Camfor taking images of scenery
 		self.cam = picam(width=width, height=height)
-		self.voice = GoogleVoice()
+		#self.voice = GoogleVoice()
 	
 	def __decode_predictions(self, scores, geometry):
 		# grab the nubmer of rows and columsn from the scores volume, then
@@ -82,7 +82,7 @@ class ReadingSystem:
 	def run(self):		
 		# capture the input image that contains text to be read
 		#img = self.cam.capture_image()
-		img = cv2.imread("test.jpg")	
+		img = cv2.imread("/home/greatman/2.png")	
 		orig = img.copy()
 		origH, origW = img.shape[:2]
 		
@@ -160,6 +160,27 @@ class ReadingSystem:
 			results.append(((startX, startY, endX, endY), text))
 	
 		results = sorted(results, key=lambda r:(r[0][1], r[0][0]))
+
+		
+		# loop over the results
+		count =1 
+		for ((startX, startY, endX, endY), text) in results:
+			# display the text OCR'd by Tesseract
+			print("OCR TEXT")
+			print("========")
+			print("{}\n".format(text))
+			# strip out non-ASCII text so we can draw the text on the image
+			# using OpenCV, then draw the text and a bounding box surrounding
+			# the text region of the input image
+			text = "".join([c if ord(c) < 128 else "" for c in text]).strip()
+			output = orig.copy()
+			cv2.rectangle(output, (startX, startY), (endX, endY),
+				(0, 0, 255), 2)
+			cv2.putText(output, text, (startX, startY - 20),
+			cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+			cv2.imwrite(f"detect{count}.jpg", output)
+			count+=1
+
 		print (results)
 		results = self.__sort_by_line(results)
 

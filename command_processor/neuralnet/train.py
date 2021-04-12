@@ -1,102 +1,188 @@
+"""Training script"""
+
 import os
-import datetime
+os.sys.path.append("../..")
+
+import argparse
 import torch
-from torch import optim
-from torch.utils.data import DataLoader
-from torchvision import transforms
 import torch.nn as nn
-from dataset import CommandsDataset
-from audiocnn import AudioCNN
+import torch.utils.data as data
+import torch.optim as optim
+from dataset import CommandsData
+from devs_and_utils.audio_utils import collate_fn
+from model import LSTMCommands
+from sklearn.metrics import classification_report
+from tabulate import tabulate
+
+
+def save_checkpoint(checkpoint_path, model, optimizer, scheduler, model_params, notes=None):
+    torch.save({
+        "notes": notes,
+        "model_params": model_params,
+        "model_state_dict": model.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
+        "scheduler_state_dict": scheduler.state_dict()
+    }, checkpoint_path)
+
+
+def binary_accuracy(preds, y):
+    #round predictions to the closest integer
+    rounded_preds = preds
+    acc = rounded_preds.eq(y.view_as(rounded_preds)).sum().item() / len(y)
+    return acc
+
+
+def test(test_loader, model, device, epoch):
+    print("\n starting test for epoch %s"%epoch)
+    accs = []
+    preds = []
+    labels = []
+    with torch.no_grad():
+        for idx, (mfcc, label) in enumerate(test_loader):
+            mfcc, label = mfcc.to(device), label.to(device)
+            print(mfcc)
+            print(mfcc.shape)
+            output = model(mfcc)[0]
+            _, pred = torch.max(torch.sigmoid(output), dim=1)
+            acc = binary_accuracy(pred, label)
+            preds += torch.flatten(pred).cpu()
+            labels += torch.flatten(label).cpu()
+            accs.append(acc)
+            print("Iter: {}/{}, accuracy: {}".format(idx, len(test_loader), acc), end="\r")
+    average_acc = sum(accs)/len(accs) 
+    print('Average test Accuracy:', average_acc, "\n")
+    report = classification_report(labels, preds)
+    print(report)
+    return average_acc, report
+
+
+def train(train_loader, model, optimizer, loss_fn, device, epoch):
+    print("\n starting train for epoch %s"%epoch)
+    losses = []
+    preds = []
+    labels = []
+    for idx, (mfcc, label) in enumerate(train_loader):
+        mfcc, label = mfcc.to(device), label.to(device=device, dtype=torch.int64)
+        optimizer.zero_grad()
+        output = model(mfcc)[0]
+        # pred = F.sigmoid(output)
+        loss = loss_fn(output, label)
+        loss.backward()
+        optimizer.step()
+        losses.append(loss.item())
+
+        # get predictions and labels for report
+        _, pred = torch.max(torch.sigmoid(output), dim=1)
+        preds += torch.flatten(pred).cpu()
+        labels += torch.flatten(label).cpu()
+
+        print("epoch: {}, Iter: {}/{}, loss: {}".format(epoch, idx, len(train_loader), loss.item()), end="\r")
+    avg_train_loss = sum(losses)/len(losses)
+    acc = binary_accuracy(torch.Tensor(preds), torch.Tensor(labels))
+    print('avg train loss:', avg_train_loss, "avg train acc", acc)
+    report = classification_report(torch.Tensor(labels).numpy(), torch.Tensor(preds).numpy())
+    print(report)
+    return acc, report
+
+
+def main(args):
+    use_cuda = not args.no_cuda and torch.cuda.is_available()
+    torch.manual_seed(1)
+    device = torch.device('cuda' if use_cuda else 'cpu')
+
+    train_dataset = CommandsData(data_json=args.train_data_json, sample_rate=args.sample_rate, valid=False)
+    test_dataset = CommandsData(data_json=args.test_data_json, sample_rate=args.sample_rate, valid=True)
+
+    kwargs = {'num_workers': args.num_workers, 'pin_memory': True} if use_cuda else {}
+    train_loader = data.DataLoader(dataset=train_dataset,
+                                        batch_size=args.batch_size,
+                                        shuffle=True,
+                                        collate_fn=collate_fn,
+                                        **kwargs)
+    test_loader = data.DataLoader(dataset=test_dataset,
+                                        batch_size=args.eval_batch_size,
+                                        shuffle=True,
+                                        collate_fn=collate_fn,
+                                        **kwargs)
+
+    model_params = {
+        "num_classes": 3, "feature_size": 40, "hidden_size": args.hidden_size,
+        "num_layers": 1, "dropout" :0.1, "bidirectional": False
+    }
+
+    model = LSTMCommands(**model_params, device=device)
+    params_path = "commands.pt"
 	
-device = (torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu"))
+    if os.path.exists(params_path):
+        print("Loading model weights from last checkpoint")
+        model.load_state_dict(torch.load(params_path)["model_state_dict"])
 
-"""
-Multitask learning combined loss function with regression and classification loss functions
-The weights for each loss is calculated using the GradNorm algorithm proposed in:
- 
-GradNorm: Gradient Normalization for Adaptive Loss Balancing in Deep Multitask Networks
-	Zhao Chen, Vijay Badrinarayanan, Chen-Yu Lee, Andrew Rabinovich
+    model = model.to(device)
+    optimizer = optim.AdamW(model.parameters(), lr=args.lr)
+    loss_fn = nn.CrossEntropyLoss()
 
-"""
-# training loop 
-def training_loop(n_epochs, optimizer, model, loss_fn, train_loader, val_loader):
-	len_train = len(train_loader)	
-	len_val = len(val_loader)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=2)
 
-	for epoch in range(1, n_epochs + 1):	
-		loss_train = 0.0
-		loss_val = 0.0
+    best_train_acc, best_train_report = 0, None
+    best_test_acc, best_test_report = 0, None
+    best_epoch = 0
+    for epoch in range(args.epochs):
+        print("\nstarting training with learning rate", optimizer.param_groups[0]['lr'])
+        train_acc, train_report = train(train_loader, model, optimizer, loss_fn, device, epoch)
+        test_acc, test_report = test(test_loader, model, device, epoch)
 
-		# Calculate loss for the training set and backpropagate
-		for mfccs, classes in train_loader:
-			mfccs = mfccs.to(device=device)
-			classes = classes.to(device=device)
-				
-			outputs = model(mfccs)
-			loss = loss_fn(outputs, classes)	
+        # record best train and test
+        if train_acc > best_train_acc:
+            best_train_acc = train_acc
+        if test_acc > best_test_acc:
+            best_test_acc = test_acc
 
-			optimizer.zero_grad()
-			loss.backward()
-			optimzer.step()
+        # saves checkpoint if metrics are better than last
+        if args.save_checkpoint_path and test_acc >= best_test_acc:
+            checkpoint_path = os.path.join(args.save_checkpoint_path, args.model_name + ".pt")
+            print("found best checkpoint. saving model as", checkpoint_path)
+            save_checkpoint(
+                checkpoint_path, model, optimizer, scheduler, model_params,
+                notes="train_acc: {}, test_acc: {}, epoch: {}".format(best_train_acc, best_test_acc, epoch),
+            )
+            best_train_report = train_report
+            best_test_report = test_report
+            best_epoch = epoch
 
-			loss_train += loss.item()	
+        table = [["Train ACC", train_acc], ["Test ACC", test_acc],
+                ["Best Train ACC", best_train_acc], ["Best Test ACC", best_test_acc],
+                ["Best Epoch", best_epoch]]
+        # print("\ntrain acc:", train_acc, "test acc:", test_acc, "\n",
+        #     "best train acc", best_train_acc, "best test acc", best_test_acc)
+        print(tabulate(table))
 
-		# Calculate validation losses for each epoch
-		with torch.no_grad():
-			loss_val = 0.0
-			for imgs, classes in val_loader:
-				imgs = ims.to(device=device)
-				classes = classes.to(device=device)
+        scheduler.step(train_acc)
 
-				preds = model(imgs)
-				loss = loss_fn(outputs, classes)	
-			
-				loss_val += loss.item()
+    print("Done Training...")
+    print("Best Model Saved to", checkpoint_path)
+    print("Best Epoch", best_epoch)
+    print("\nTrain Report \n")
+    print(best_train_report)
+    print("\nTest Report\n")
+    print(best_test_report)
 
-		if epoch == 1 or epoch % 10 == 0:
-			print("{} Epoch {}, Training loss {}, Validation loss {}".format(
-				datetime.datetime.now(), epoch, loss_train / len_train, loss_val / len_val))
 
 if __name__ == "__main__":
-	val_size = float(input("Validation set ratio (Ex: 0.2): "))
-	bs = int(input("Batch size: "))	
-	n_epochs = int(input("Number of epochs: "))
+    parser = argparse.ArgumentParser(description="Wake Word Training Script")
+    parser.add_argument('--sample_rate', type=int, default=8000, help='sample_rate for data')
+    parser.add_argument('--epochs', type=int, default=100, help='epoch size')
+    parser.add_argument('--batch_size', type=int, default=32, help='size of batch')
+    parser.add_argument('--eval_batch_size', type=int, default=32, help='size of batch')
+    parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
+    parser.add_argument('--model_name', type=str, default="commands", required=False, help='name of model to save')
+    parser.add_argument('--save_checkpoint_path', type=str, default=None, help='Path to save the best checkpoint')
+    parser.add_argument('--train_data_json', type=str, default=None, required=True, help='path to train data json file')
+    parser.add_argument('--test_data_json', type=str, default=None, required=True, help='path to test data json file')
+    parser.add_argument('--no_cuda', action='store_true', default=False, help='disables CUDA training')
+    parser.add_argument('--num_workers', type=int, default=1, help='number of data loading workers')
+    parser.add_argument('--hidden_size', type=int, default=128, help='lstm hidden size')
 
-	# create dataset from the dataset/images directory with a format (img, angle, halt_signal)
-	data_path = str(input("Please specify the location of the AudioCNN dataset:"))
-	dataset = CommandsDataset(data_path)
+    args = parser.parse_args()
 
-	# Split the dataset
-	n_samples = len(dataset)
-	n_val = int(0.2 * n_samples)
-	shuffled_indices = torch.randperm(n_samples)
-	
-	train_indices = shuffled_indices[:-n_val]
-	val_indices = shuffled_indices[-n_val:]
-	
-	# Dataloader to feed the training loop 
-	train_loader = DataLoader(dataset[train_indices], batch_size=bs, shuffle=True)
-	val_loader = DataLoader(dataset[val_indices], batch_size=bs, shuffle=True)
+    main(args)
 
-	# Load model	
-	model = AudioCNN().to(device=device)
-	model_path = os.getcwd() + "/audiocnn_weights.pt"
-
-	if os.path.exists(model_path):
-		model.load_state_dict(torch.load(model_path))
-	
-	# Train model 
-	optimizer = optim.SGD(model.parameters(), lr=1e-2)
-	loss_fn = nn.CrossEntropyLoss()
-
-	training_loop(
-		n_epochs = n_epochs,
-		optimizer = optimizer,
-		model = model,
-		loss_fn = loss_fn,
-		train_loader = train_loader,
-		val_loader = val_loader	
-	)
-
-	# Save trained model
-	torch.save(model.state_dict(), model_path)
