@@ -1,6 +1,7 @@
 import os
 os.sys.path.append("..")
 
+import time
 from imutils.object_detection import non_max_suppression
 import numpy as np
 import pytesseract
@@ -12,7 +13,7 @@ from devs_and_utils.google_voice import GoogleVoice
 from playsound import playsound
 
 class ReadingSystem:
-	def __init__(self, width=, height=480, min_confidence=0.5, padding=0.05):
+	def __init__(self, width=2560, height=1600, min_confidence=0.4, padding=0.2):
 		self.width = width
 		self.height = height
 		self.min_confidence = min_confidence
@@ -80,9 +81,9 @@ class ReadingSystem:
 		return rects, confidences
 
 	def run(self):		
+		start = time.time()
 		# capture the input image that contains text to be read
-		#img = self.cam.capture_image()
-		img = cv2.imread("test.jpg")	
+		img = self.cam.capture_image()
 		orig = img.copy()
 		origH, origW = img.shape[:2]
 		
@@ -120,6 +121,7 @@ class ReadingSystem:
 		rects, confidences = self.__decode_predictions(scores, geometry)
 		boxes = non_max_suppression(np.array(rects), probs=confidences)
 
+		print(time.time() - start)
 		# initialize the list of results
 		results = []
 
@@ -170,6 +172,7 @@ class ReadingSystem:
 			text += " "
 			response += text
 
+		print(time.time() - start)
 		print(response)
 
 		self.voice.text_to_speech(voice_name="en-GB-Standard-B", text=response, name="response")

@@ -31,7 +31,7 @@ class GuideCNN(nn.Module):
 		self.conv3 = nn.Conv2d(8, 4, kernel_size=3, padding=1)
 		self.fc1 = nn.Linear(4*32*32, 1024) 
 		self.fc2 = nn.Linear(1024, 512)
-		self.fc3 = nn.Linear(512,10) 
+		self.fc3 = nn.Linear(512,6) 
 
 		# Define proportion or neurons to dropout
 		self.dropout = nn.Dropout(dropout_ratio)

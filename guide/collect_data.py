@@ -51,7 +51,7 @@ from imusensor.filters import madgwick
 from devs_and_utils.picam import picam 
 
 # UPDATE TIMER VARAIBLE
-UPDATE_TIME = 2
+UPDATE_TIME = 2.8
 MIDLINE = -9.8
 THRESH = 0.6
 

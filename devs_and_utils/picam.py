@@ -8,10 +8,10 @@ class picam:
 	
 	def gstreamer_pipeline(self, capture_width, capture_height):
 		return (
-			"nvarguscamerasrc ! "
+			"nvarguscamerasrc sensor_mode=0 ! "
 			"video/x-raw(memory:NVMM), "
-			"width=(int)1280, height=(int)720, "
-			"format=(string)NV12, framerate=(fraction)60/1 ! "
+			"width=(int)3820, height=(int)2464, "
+			"format=(string)NV12, framerate=(fraction)21/1 ! "
 			"nvvidconv flip-method=0 ! "
 			"video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! "
 			"videoconvert ! "
@@ -30,7 +30,8 @@ class picam:
 
 	def capture_image(self):
 		if self.cam.isOpened():
-			ret_val, img = self.cam.read()
+			for i in range(12):
+				ret_val, img = self.cam.read()
 			return img
 		else:
 			print("Unable to open camera")
@@ -39,6 +40,6 @@ class picam:
 		self.cam.release()
 
 if __name__=="__main__":
-	cam = picam(width=2048, height=1024)
+	cam = picam(width=2464, height=2464)
 	cam.save_image(input("Name of image: "))
 	cam.cleanup()

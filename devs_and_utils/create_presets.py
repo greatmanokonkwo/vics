@@ -13,5 +13,5 @@ synthesizer.text_to_speech("Just a moment ... I need to first read what the text
 playsound("read.wav")
 """
 
-synthesizer.text_to_speech("Hello, My name is VICS. How can I be of assistance to you today.", "greet")
-playsound("greet.wav")
+synthesizer.text_to_speech("There  is a person directly in front of you ... and there is a chair to your left", "fake")
+playsound("fake.wav")

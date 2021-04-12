@@ -26,7 +26,6 @@ time_cnt = 0
 start_time = time.time()
 initial_yaw = 0
 
-"""
 # Sensor fusion testing for getting angles
 while True:
 
@@ -40,10 +39,10 @@ while True:
 
 	if time_cnt == 2:
 		time_cnt = 0	
-		print(f"Accelorometer: {imu.AccelVals[0]} {imu.AccelVals[1]} {imu.AccelVals[2]}")
-		print(f"Gyroscope: {imu.GyroVals[0]} {imu.GyroVals[1]} {imu.GyroVals[2]}")
-		print(f"Magnetometer: {imu.MagVals[0]} {imu.MagVals[1]} {imu.MagVals[2]}")
-		print (f"Roll: {sensorfusion.roll} ; Pitch : {sensorfusion.pitch} ; Yaw : {sensorfusion.yaw}")
+		#print(f"Accelorometer: {imu.AccelVals[0]} {imu.AccelVals[1]} {imu.AccelVals[2]}")
+		#print(f"Gyroscope: {imu.GyroVals[0]} {imu.GyroVals[1]} {imu.GyroVals[2]}")
+		#print(f"Magnetometer: {imu.MagVals[0]} {imu.MagVals[1]} {imu.MagVals[2]}")
+		print (f"Yaw : {round(sensorfusion.yaw/10)*10}")
 	time_cnt+=1
 	time.sleep(0.01)
 
@@ -73,3 +72,4 @@ while True:
 		max_val = -999
 
 		currTime = newTime
+"""

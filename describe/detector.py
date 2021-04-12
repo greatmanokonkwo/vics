@@ -17,10 +17,8 @@ class ObjectDetector:
 		self.model.net_info["height"] = reso
 		self.inp_dim = int(self.model.net_info["height"])
 
-		"""
 		if self.CUDA:
 			self.model.cuda()
-		"""
 
 		self.model.eval()
 
@@ -36,13 +34,10 @@ class ObjectDetector:
 	def detect(self, img):
 		img_ = prep_image(img, self.inp_dim)
 
-		"""
 		if self.CUDA:
 			img_ = img_.cuda()
-			torch.cuda.synchronize() # Wait for GPU to complete inference operations
-		"""
 
-		pred = self.model(img_, False) #self.CUDA)
+		pred = self.model(img_, self.CUDA)
 		res = write_results(pred, self.confidence, self.num_classes) # only take the 4 corner coordinate points and class index
 
 		if type(res) != int:
