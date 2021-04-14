@@ -6,6 +6,7 @@ from imutils.object_detection import non_max_suppression
 import numpy as np
 import pytesseract
 import cv2
+import time
 
 from devs_and_utils.picam import picam
 from devs_and_utils.google_voice import GoogleVoice
@@ -13,11 +14,7 @@ from devs_and_utils.google_voice import GoogleVoice
 from playsound import playsound
 
 class ReadingSystem:
-<<<<<<< HEAD
-	def __init__(self, width=2560, height=1600, min_confidence=0.4, padding=0.2):
-=======
-	def __init__(self, width=928, height=928, min_confidence=0.5, padding=0.05):
->>>>>>> 6d44fb93e2f710cae058cba1609d301650f3c620
+	def __init__(self, width=928, height=928, min_confidence=0.4, padding=0.2):
 		self.width = width
 		self.height = height
 		self.min_confidence = min_confidence
@@ -87,12 +84,10 @@ class ReadingSystem:
 	def run(self):		
 		start = time.time()
 		# capture the input image that contains text to be read
-<<<<<<< HEAD
-		img = self.cam.capture_image()
-=======
 		#img = self.cam.capture_image()
-		img = cv2.imread("/home/greatman/2.png")	
->>>>>>> 6d44fb93e2f710cae058cba1609d301650f3c620
+		img = cv2.imread("test.jpg")	
+
+		start_t = time.time()
 		orig = img.copy()
 		origH, origW = img.shape[:2]
 		
@@ -130,7 +125,9 @@ class ReadingSystem:
 		rects, confidences = self.__decode_predictions(scores, geometry)
 		boxes = non_max_suppression(np.array(rects), probs=confidences)
 
-		print(time.time() - start)
+		print("Time for EAST Detection:", time.time() - start_t)
+		start_t = time.time()
+
 		# initialize the list of results
 		results = []
 
@@ -170,6 +167,7 @@ class ReadingSystem:
 			# of results
 			results.append(((startX, startY, endX, endY), text))
 	
+		print("Time for Tesseract:", time.time() - start_t)
 		results = sorted(results, key=lambda r:(r[0][1], r[0][0]))
 
 		
