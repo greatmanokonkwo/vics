@@ -5,6 +5,7 @@ from imutils.object_detection import non_max_suppression
 import numpy as np
 import pytesseract
 import cv2
+import time
 
 from devs_and_utils.picam import picam
 from devs_and_utils.google_voice import GoogleVoice
@@ -82,7 +83,9 @@ class ReadingSystem:
 	def run(self):		
 		# capture the input image that contains text to be read
 		#img = self.cam.capture_image()
-		img = cv2.imread("/home/greatman/2.png")	
+		img = cv2.imread("test.jpg")	
+
+		start_t = time.time()
 		orig = img.copy()
 		origH, origW = img.shape[:2]
 		
@@ -119,6 +122,9 @@ class ReadingSystem:
 		# suppress weak, overlapping bounding boxes
 		rects, confidences = self.__decode_predictions(scores, geometry)
 		boxes = non_max_suppression(np.array(rects), probs=confidences)
+
+		print("Time for EAST Detection:", time.time() - start_t)
+		start_t = time.time()
 
 		# initialize the list of results
 		results = []
@@ -159,6 +165,7 @@ class ReadingSystem:
 			# of results
 			results.append(((startX, startY, endX, endY), text))
 	
+		print("Time for Tesseract:", time.time() - start_t)
 		results = sorted(results, key=lambda r:(r[0][1], r[0][0]))
 
 		
