@@ -14,7 +14,7 @@ from devs_and_utils.google_voice import GoogleVoice
 from playsound import playsound
 
 class ReadingSystem:
-	def __init__(self, width=928, height=928, min_confidence=0.4, padding=0.2):
+	def __init__(self, width=928, height=928, min_confidence=0.5, padding=0.05):
 		self.width = width
 		self.height = height
 		self.min_confidence = min_confidence
@@ -22,7 +22,7 @@ class ReadingSystem:
 
 		# Raspberry Pi Camfor taking images of scenery
 		self.cam = picam(width=width, height=height)
-		#self.voice = GoogleVoice()
+		self.voice = GoogleVoice()
 	
 	def __decode_predictions(self, scores, geometry):
 		# grab the nubmer of rows and columsn from the scores volume, then
@@ -112,6 +112,8 @@ class ReadingSystem:
 		# load the pre-trained EAST text detector
 		print("[INFO] Loading EAST text detector...")
 		net = cv2.dnn.readNet("frozen_east_text_detection.pb")
+		net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+		net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
 
 		# construct a blob from the image and then perform a forward pass of 
 		# the model to obtain the two output layer sets
@@ -132,7 +134,9 @@ class ReadingSystem:
 		results = []
 
 		# loop over the bounding boxes
+		count = 0
 		for (startX, startY, endX, endY) in boxes:
+			count += 1
 			# scale the bounding box coordinates based on the respective
 			# ratios
 			startX = int(startX * rW)
@@ -154,6 +158,7 @@ class ReadingSystem:
 
 			# extract the actual padded ROI
 			roi = orig[startY:endY, startX:endX]
+			cv2.imwrite(f"img{count}.jpg", roi)	
 
 			# in order to apply Tesseract v4 to OCR text we must supply
 			# (1) a language, (2) an OEM flag of 4, indicating that the we

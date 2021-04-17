@@ -24,7 +24,7 @@ class SceneDescribeSystem:
 		self.scene_size = scene_size
 
 		# Raspbery Pi Cam for taking 416x416 images of scenery
-		self.cam = picam(width=scene_size, height=scene_size)
+		self.cam = picam(width=1028, height=1028)
 	
 		# Speech to text module
 		self.voice = GoogleVoice()
@@ -57,6 +57,7 @@ class SceneDescribeSystem:
 
 	# Takes information of a box and returns the box location (Top left, Top center, Top right, Mid left, Mid center, Mid right, Bottom left, Bottom center, Bottom right)
 	def __get_object_location2(self, x1, y1, x2, y2):
+		print(x1, y1, x2, y2)
 		scene_3 = self.scene_size/3
 		divs = [scene_3, 2*scene_3, self.scene_size]
 
@@ -79,23 +80,27 @@ class SceneDescribeSystem:
 	# Take in a list of objects detected in scene and return an appropriate text response that describes the scene
 	def __generate_response(self, objs):
 		response = ""
-	
-		num_objs = len(objs)
 
-		for i in range(num_objs):
-			if i == (num_objs-1):
-				response += ("and ")
-	
-			response += ("there is ")
-			if objs[i][0][0] in ["a","e","i","o","u"]:
-				response += ("an ")
+		for key in objs:
+			locs = objs[key]
+			n = len(locs)
+
+			if n > 1:
+				key_str = f"There are {n} {key}s in the scene "
 			else:
-				response += ("a ")
-
-			response += ("{0} at the ".format(objs[i][0]))
-			response += ("{0} corner of the scene, ".format(objs[i][1]))
-
-		return response[:-2] # get rid of extra ", " at end
+				key_str = f"There is one {key} in the scene at the {locs[0]}. "
+				response += key_str
+				continue
+			
+			for i in range(n):
+				if i == n-1 and n > 1:
+					key_str += "and "
+				key_str += "one at the {locs[i]} "
+		
+			key_str += ". "
+			response.append(key_str)
+		
+		return response
 
 	def cleanup(self):
 		self.cam.cleanup()
@@ -103,23 +108,33 @@ class SceneDescribeSystem:
 	def run(self):
 		# Capture the scene and returned voice response of the objects in the scene def run(self, division=2): # Capture image
 		img = self.cam.capture_image()
+		#img = cv2.imread("imgs/1.jpg")
+		(H, W) = img.shape[:2]
+		self.scene_size = W	
 	
 		start = time.time()
 		# Run inference
 		res = self.detector.detect(img)
 		end = time.time()
-		print(f"Ran inference in {end - start} seconds!")
+		print(res)
 
 		response = None
-		if type(res) != int:
+		if len(res) > 0:
 			# Create python list of the objects of the format [class_name, object_location]
-			objs = []
+			objs = {}
+			for obj in res:
+				objs.update({obj[4]: []})
+
 			for obj in res:
 				if self.division == 1:
-					objs.append([obj[4], self.__get_object_location1(obj[0], obj[1], obj[2], obj[3])])
+					location = self.__get_object_location1(obj[0], obj[1], obj[2], obj[3])
 				else:
-					objs.append([obj[4], self.__get_object_location2(obj[0], obj[1], obj[2], obj[3])])
+					location = self.__get_object_location2(obj[0], obj[1], obj[2], obj[3])
 		
+				objs[obj[4]].append(location)
+
+			print(objs)	
+					
 			# Generate response using list
 			response = self.__generate_response(objs)
 
@@ -144,4 +159,3 @@ if __name__=="__main__":
 	start = time.time()
 	system.run()
 	system.cleanup()
-
