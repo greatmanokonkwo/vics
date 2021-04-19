@@ -28,6 +28,11 @@ export BUILD_VERSION=0.8.1
 sudo python3 setup.py install    
 cd ../ 
 ```
+Install torchaudio
+```
+sudo apt-get update && apt-get install -y --no-install-recommends sox libsox-dev libsox-fmt-all && rm -rf /var/lib/apt/lists/*
+git clone -b v0.8.0 https://github.com/pytorch/audio torchaudio && cd torchaudio && sudo python3 setup.py install && cd ../ && sudo rm -rf torchaudio
+```
 
 ### pip install packages
 ```
