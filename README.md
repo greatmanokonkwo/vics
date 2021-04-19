@@ -107,8 +107,8 @@ wget https://pjreddie.com/media/files/yolov3-tiny.weights
 - [x] Interface with microphone hardware
 - [x] Interface with speaker hardware
 - [x] Write object detection model 
-- [ ] Build WakeWord model for AI voice assistant (wake word: "Hey VICS")
-- [ ] Build NLP model for taking in audio input and return a classification for the command issued
+- [x] Build WakeWord model for AI voice assistant (wake word: "Hey VICS")
+- [x] Build NLP model for taking in audio input and return a classification for the command issued
 - [x] Using the detected objects find way to create voice responses with the detected objects
 - [x] Write data collection scripts
 
