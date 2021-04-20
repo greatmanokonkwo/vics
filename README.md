@@ -7,31 +7,41 @@ VICS is an end-to-end learning based visual impairment device that strives to ma
 
 ## Running on native machine
 
+### Pytorch prerequisites
+```
+sudo apt-get install -y --no-install-recommends python3-pip python3-dev libopenblas-dev libopenmpi2 openmpi-bin openmpi-common gfortran && sudo rm -rf /var/lib/apt/lists/*
+pip3 install setuptools Cython wheel
+pip3 install numpy --verbose
+```
 ### Pytorch for Jetson nano
 
 *Instructions from https://forums.developer.nvidia.com/t/pytorch-for-jetson-version-1-7-0-now-available/72048*
 
-Install PyTorch pip wheel v1.7.0
+Install PyTorch pip wheel v1.8.0
 
 ```
-wget https://nvidia.box.com/shared/static/cs3xn3td6sfgtene6jdvsxlr366m2dhq.whl -O torch-1.7.0-cp36-cp36m-linux_aarch64.whl
+wget https://nvidia.box.com/shared/static/p57jwntv436lfrd78inwl7iml6p13fzh.whl -O torch-1.8.0-cp36-cp36m-linux_aarch64.whl
 sudo apt-get install python3-pip libopenblas-base libopenmpi-dev 
 pip3 install Cython
-pip3 install numpy torch-1.7.0-cp36-cp36m-linux_aarch64.whl
+pip3 install numpy torch-1.8.0-cp36-cp36m-linux_aarch64.whl
 ```
 Install torchvision
 ```
 sudo apt-get install libjpeg-dev zlib1g-dev libpython3-dev libavcodec-dev libavformat-dev libswscale-dev
-git clone --branch v0.8.1 https://github.com/pytorch/vision torchvision   # see below for version of torchvision to download
+git clone --branch v0.9.0 https://github.com/pytorch/vision torchvision   # see below for version of torchvision to download
 cd torchvision
-export BUILD_VERSION=0.8.1
+export BUILD_VERSION=0.9.0
 sudo python3 setup.py install    
 cd ../ 
 ```
 Install torchaudio
 ```
-sudo apt-get update && apt-get install -y --no-install-recommends sox libsox-dev libsox-fmt-all && rm -rf /var/lib/apt/lists/*
-git clone -b v0.8.0 https://github.com/pytorch/audio torchaudio && cd torchaudio && sudo python3 setup.py install && cd ../ && sudo rm -rf torchaudio
+sudo apt-get update 
+sudo apt-get install sox libsox-dev libsox-fmt-all
+git clone -b v0.8.0 https://github.com/pytorch/audio torchaudio
+cd torchaudio
+export BUILD_VERSION=0.8.0
+sudo python3 setup.py install
 ```
 
 ### pip install packages
@@ -96,7 +106,7 @@ wget https://pjreddie.com/media/files/yolov3-tiny.weights
 #### Hardware
 
 - [x] MPU9250 9-axis IMU sensor
-- [x] Raspberry Pi Camera
+- [x] Raspberry Pi Camerasudo apt-get install libjpeg8 libjpeg62-dev libfreetype6 libfreetype6-dev
 - [x] 2x Vibration motors
 - [x] Get and setup Macro/Wide lens for Pi Camera
 
