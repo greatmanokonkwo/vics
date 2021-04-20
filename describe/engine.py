@@ -5,29 +5,18 @@ The engine then uses a text-to-speech module to say what was in the captured sce
 import cv2
 import asyncio
 
-import os
-os.sys.path.append("..")
-
 import numpy as np
-from devs_and_utils.picam import picam
-from devs_and_utils.google_voice import GoogleVoice
 from detector import ObjectDetector
-
-import time # Take out
 
 from playsound import playsound
 
+
 class SceneDescribeSystem:
 	
-	def __init__(self, scene_size=416, division=1):
+	def __init__(self, division=1):
+		"""Modules"""	
 		self.division = division # Use _get_object_location1 or __get_object_location2
-		self.scene_size = scene_size
-
-		# Raspbery Pi Cam for taking 416x416 images of scenery
-		self.cam = picam(width=1028, height=1028)
-	
-		# Speech to text module
-		self.voice = GoogleVoice()
+		self.scene_size = None
 
 		# object detector
 		self.detector = ObjectDetector()
@@ -57,7 +46,6 @@ class SceneDescribeSystem:
 
 	# Takes information of a box and returns the box location (Top left, Top center, Top right, Mid left, Mid center, Mid right, Bottom left, Bottom center, Bottom right)
 	def __get_object_location2(self, x1, y1, x2, y2):
-		print(x1, y1, x2, y2)
 		scene_3 = self.scene_size/3
 		divs = [scene_3, 2*scene_3, self.scene_size]
 
@@ -95,28 +83,22 @@ class SceneDescribeSystem:
 			for i in range(n):
 				if i == n-1 and n > 1:
 					key_str += "and "
-				key_str += "one at the {locs[i]} "
+				key_str += f"one at the {locs[i]} "
 		
 			key_str += ". "
-			response.append(key_str)
+			response += (key_str)
 		
 		return response
 
-	def cleanup(self):
-		self.cam.cleanup()
-
-	def run(self):
+	def run(self, cam):
 		# Capture the scene and returned voice response of the objects in the scene def run(self, division=2): # Capture image
-		img = self.cam.capture_image()
-		#img = cv2.imread("imgs/1.jpg")
+		#img = cam.capture_image()
+		img = cv2.imread("imgs/1.jpg")
 		(H, W) = img.shape[:2]
 		self.scene_size = W	
 	
-		start = time.time()
 		# Run inference
 		res = self.detector.detect(img)
-		end = time.time()
-		print(res)
 
 		response = None
 		if len(res) > 0:
@@ -133,29 +115,14 @@ class SceneDescribeSystem:
 		
 				objs[obj[4]].append(location)
 
-			print(objs)	
-					
 			# Generate response using list
 			response = self.__generate_response(objs)
 
 		else:
 			response = "Sorry, no objects were detected."
 
-		print(response)
-		
-		# Turn generated response to speech
-		self.voice.text_to_speech(voice_name="en-GB-Standard-B", text=response, name="response")	
-
-		# Send generated audio file "response.wav" to speakers
-		response_wav = open("response.wav", "rb")
-
-		playsound("response.wav") # play repsonse on speakers
-
-		# Delete response.wav
-		os.remove("response.wav")
-		
+		return response
+	
 if __name__=="__main__":
 	system = SceneDescribeSystem()
-	start = time.time()
 	system.run()
-	system.cleanup()

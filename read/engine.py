@@ -1,16 +1,10 @@
-import os
-os.sys.path.append("..")
-
 import time
-from imutils.object_detection import non_max_suppression
 import numpy as np
 import pytesseract
 import cv2
 import time
 
-from devs_and_utils.picam import picam
-from devs_and_utils.google_voice import GoogleVoice
-
+from imutils.object_detection import non_max_suppression
 from playsound import playsound
 
 class ReadingSystem:
@@ -20,10 +14,12 @@ class ReadingSystem:
 		self.min_confidence = min_confidence
 		self.padding = padding
 
-		# Raspberry Pi Camfor taking images of scenery
-		self.cam = picam(width=width, height=height)
-		self.voice = GoogleVoice()
-	
+		# load the pre-trained EAST text detector
+		print("[INFO] Loading EAST text detector...")
+		self.net = cv2.dnn.readNet("/home/greatman/code/vics/read/frozen_east_text_detection.pb")
+		self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+		self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+
 	def __decode_predictions(self, scores, geometry):
 		# grab the nubmer of rows and columsn from the scores volume, then
 		# initialize our set of bounding box rectangles and corresponding
@@ -84,8 +80,8 @@ class ReadingSystem:
 	def run(self):		
 		start = time.time()
 		# capture the input image that contains text to be read
-		#img = self.cam.capture_image()
-		img = cv2.imread("test.jpg")	
+		img = self.cam.capture_image()
+		#img = cv2.imread("/home/greatman/code/vics/read/test.jpg")	
 
 		start_t = time.time()
 		orig = img.copy()
@@ -108,26 +104,19 @@ class ReadingSystem:
 		layerNames = [
 			"feature_fusion/Conv_7/Sigmoid",
 			"feature_fusion/concat_3"]
-
-		# load the pre-trained EAST text detector
-		print("[INFO] Loading EAST text detector...")
-		net = cv2.dnn.readNet("frozen_east_text_detection.pb")
-		net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-		net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
-
+		
 		# construct a blob from the image and then perform a forward pass of 
 		# the model to obtain the two output layer sets
 		blob = cv2.dnn.blobFromImage(img, 1.0, (W, H),
 			(123.68, 116.78, 103.94), swapRB=True, crop=False)
-		net.setInput(blob)
-		scores, geometry = net.forward(layerNames)
+		self.net.setInput(blob)
+		scores, geometry = self.net.forward(layerNames)
 
 		# decode the predictions, then  apply non-maxima suppression to
 		# suppress weak, overlapping bounding boxes
 		rects, confidences = self.__decode_predictions(scores, geometry)
 		boxes = non_max_suppression(np.array(rects), probs=confidences)
 
-		print("Time for EAST Detection:", time.time() - start_t)
 		start_t = time.time()
 
 		# initialize the list of results
@@ -172,7 +161,6 @@ class ReadingSystem:
 			# of results
 			results.append(((startX, startY, endX, endY), text))
 	
-		print("Time for Tesseract:", time.time() - start_t)
 		results = sorted(results, key=lambda r:(r[0][1], r[0][0]))
 
 		
@@ -195,7 +183,6 @@ class ReadingSystem:
 			cv2.imwrite(f"detect{count}.jpg", output)
 			count+=1
 
-		print (results)
 		results = self.__sort_by_line(results)
 
 		results = sorted(results, key=lambda r:(r[0][1], r[0][0]))
@@ -205,13 +192,7 @@ class ReadingSystem:
 			text += " "
 			response += text
 
-		print(time.time() - start)
-		print(response)
-
-		self.voice.text_to_speech(voice_name="en-GB-Standard-B", text=response, name="response")
-	
-		playsound("response.wav")
-		os.remove("response.wav")
+		return response
 
 	# we want to read the words on the image line by line and left to right
 	# so we are given y-coordinates by the localization coordinates so we must group each of 
@@ -250,10 +231,6 @@ class ReadingSystem:
 
 		return results_by_line	
 
-	def cleanup(self):
-		self.cam.cleanup()
-
 if __name__=="__main__":
 	system = ReadingSystem()
 	system.run()
-	system.cleanup()	
