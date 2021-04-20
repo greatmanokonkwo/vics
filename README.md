@@ -28,6 +28,11 @@ export BUILD_VERSION=0.8.1
 sudo python3 setup.py install    
 cd ../ 
 ```
+Install torchaudio
+```
+sudo apt-get update && apt-get install -y --no-install-recommends sox libsox-dev libsox-fmt-all && rm -rf /var/lib/apt/lists/*
+git clone -b v0.8.0 https://github.com/pytorch/audio torchaudio && cd torchaudio && sudo python3 setup.py install && cd ../ && sudo rm -rf torchaudio
+```
 
 ### pip install packages
 ```
@@ -47,14 +52,11 @@ source ~/.bashrc
 gcloud auth list
 gcloud config list project
 gcloud services enable texttospeech.googleapis.com
+export PROJECT_ID=$(gcloud config get-value core/project)
 echo "export PROJECT_ID=$(gcloud config get-value core/project)" > ~/.bashrc
 gcloud iam service-accounts keys create ~/key.json --iam-account my-tts-sa@${PROJECT_ID}.iam.gserviceaccount.com
 export GOOGLE_APPLICATION_CREDENTIALS=~/key.json
-<<<<<<< HEAD
 echo export GOOGLE_APPLICATION_CREDENTIALS=~/key.json > ~/.bashrc
-
-=======
->>>>>>> 6bf3cdf48e91dc832ffe5f2814dabd1478140d94
 ```
 
 ### Google Tesseract-OCR Engine
@@ -105,8 +107,8 @@ wget https://pjreddie.com/media/files/yolov3-tiny.weights
 - [x] Interface with microphone hardware
 - [x] Interface with speaker hardware
 - [x] Write object detection model 
-- [ ] Build WakeWord model for AI voice assistant (wake word: "Hey VICS")
-- [ ] Build NLP model for taking in audio input and return a classification for the command issued
+- [x] Build WakeWord model for AI voice assistant (wake word: "Hey VICS")
+- [x] Build NLP model for taking in audio input and return a classification for the command issued
 - [x] Using the detected objects find way to create voice responses with the detected objects
 - [x] Write data collection scripts
 
