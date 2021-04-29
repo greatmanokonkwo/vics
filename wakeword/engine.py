@@ -42,7 +42,7 @@ class Listener:
 
 class WakeWordEngine:
 
-    def __init__(self, model_file):
+    def __init__(self, model_file="/home/greatman/code/vics/wakeword/neuralnet/wakeword.pt"):
         self.listener = Listener(sample_rate=8000, record_seconds=2)
         self.model = torch.jit.load(model_file)
         self.model.eval().to('cpu')  #run on cpu
@@ -94,35 +94,6 @@ class WakeWordEngine:
         thread = threading.Thread(target=self.inference_loop,
                                     args=(action,), daemon=True)
         thread.start()
-
-
-class DemoAction:
-    """This demo action will just randomly say Arnold Schwarzenegger quotes
-        args: sensitivty. the lower the number the more sensitive the
-        wakeword is to activation.
-    """
-    def __init__(self, sensitivity=10):
-        # import stuff here to prevent engine.py from 
-        # importing unecessary modules during production usage
-        import os
-        import subprocess
-
-        self.detect_in_row = 0
-
-        self.sensitivity = sensitivity
-
-    def __call__(self, prediction):
-        if prediction == 1:
-            self.detect_in_row += 1
-            if self.detect_in_row == self.sensitivity:
-                self.play()
-                self.detect_in_row = 0
-        else:
-            self.detect_in_row = 0
-
-    def play(self):
-        playsound("/home/greatman/code/vics/devs_and_utils/presets/greet.wav")
-		
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="demoing the wakeword engine")

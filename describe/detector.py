@@ -99,3 +99,4 @@ if __name__=="__main__":
 	detector = ObjectDetector()
 	img = cv2.imread(input("Path of test input image: "))
 	print(detector.detect(img))
+

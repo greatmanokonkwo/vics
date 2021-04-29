@@ -5,9 +5,6 @@ Left buzzer ON (continous) - Turn left by required degrees
 Right buzzer ON (continous) - Turn right by the required degrees
 Left and Right buzzer ON (4 secs) - Stop!
 """
-import os
-os.sys.path.append("..")
-
 import time
 import smbus
 from PIL import Image
@@ -18,7 +15,6 @@ from torchvision import transforms
 from imusensor.MPU9250 import MPU9250
 from imusensor.filters import madgwick
 
-from devs_and_utils.picam import picam
 from neuralnet.GuideCNN import GuideCNN
 
 class GuideSystem:
@@ -27,9 +23,6 @@ class GuideSystem:
 	RIGHT_BUZZER = 11
 
 	def __init__(self):
-		# The Raspberry Pi Camera V2 for taking images 
-		self.cam = picam(width=256, height=256)
-
 		# Initialize and caliberate IMU sensor
 		address = 0x68
 		bus = smbus.SMBus(1)
@@ -84,11 +77,11 @@ class GuideSystem:
 
 		return currTime
 
-	def run(self):
+	def run(self, cam):
 		
 		try:
 			# Collect image and run inference
-			self.cam.save_image("capture.jpg")
+			cam.save_image("capture.jpg")
 			img = self.tensor(Image.open("capture.jpg"))
 			direct_class = torch.max(self.softmax(self.model(img.unsqueeze(0))[0]), dim=0)[1].item()
 	
@@ -131,7 +124,6 @@ class GuideSystem:
 			self.cleanup()	
 
 	def cleanup(self):
-		self.cam.cleanup()	
 		GPIO.cleanup()	
 
 if __name__ == "__main__":

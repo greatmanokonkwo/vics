@@ -9,3 +9,9 @@ guide/dataset
 devices/calib.json
 devices/__pycache__
 guide/dataset
+devs_and_utils/output.avi
+devs_and_utils/output1.avi
+devs_and_utils/output2.avi
+devs_and_utils/output4.avi
+guide/video.avi
+guide/output.avi

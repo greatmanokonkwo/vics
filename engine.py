@@ -1,123 +1,172 @@
-import requests
-import Jetson.GPIO as GPIO
+import os
+import time
+import threading
+import playsound
+#import Jetson.GPIO as GPIO
+import pyaudio
+import wave
 
-from wakeword.engine import WakeWordProcessor
-from command_processor.engine import CommandProcessor
-from guide.engine import GuideSystem
-from describe.engine import SceneDescribeSystem 
-from read.engine import ReadingSystem
+import torch
+import torchaudio
 
+import wakeword.engine
+from wakeword import neuralnet
+import command_processor
+import guide 
+import describe  
+import read 
+
+from devs_and_utils.picam import picam
+from devs_and_utils.audio_utils import get_featurizer
+from devs_and_utils.google_voice import GoogleVoice
 
 """
 COMMAND 0 (Guide): This enable to GuideNet process that relays angles of direction to travel in to the user, using vibrations
 COMMAND 1 (Describe): This enables the Scene description process, that detects various objects in front of the user and using voice, tells what these objects are and where they are located (left, center, right) relative to them
 COMMAND 2 (Read): This enables to reading process which takes a picture of whatever is in front of the VICS gear camera and reads the text in the image
+"""
+# Global Variables
 
-ONLINE MODE: This mode supports all three commands and enhances command 1 with the google text to speech API
-OFFLINE MODE: This mode only supports the first 2 commands and uses downloaded premade reponses for each object-position possibility
-
-""" 
-
-# For ONLINE MODE 
 WAKEWORD_DETECTED = False
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
-# For OFFLINE MODE. Guidance System is turned on automatically in offline mode
-## GPIO pin for guidance system button
-BUTTON0 = 38
+# General tools and devices 
+cam = picam(width=1028, height=1028)
 
-## GPIO pin for scene description button
-BUTTON1 = 40
+voice = GoogleVoice()
+voice_name = "en-GB-Standard-B"
 
-# Command execution engines
-GUIDE = GuideSystem()
-DESCRIBE = SceneDescribeSystem() 
-READ = ImageReadingSystem()
+audio_transform = get_featurizer(8000)
 
-# Audio stream processors
-WAKE = WakeWord()
-COMMAND = CommandProcessor()
+# System Modules
+## Wakeword
+wakeword_engine = WakeWordEngine()
 
-def check_connection():
-	url = "https://github.com/greatmanokonkwo/vics"
-	timeout = 5
-	try:
-		request = requests.get(url, timeout=timeout)
-		print("Connected to the Internet")
-		return True
-	except (requests.ConnectionError, requests.Timeout) as exception:
-		print("No internet connection.")
-		return False
+## Commands Detector
+command_names = ["Guide Me", "Describe the Scene", "Read this"]
 
-def wakeword_detect:
-	# TODO: Add wakeword detection process
+model_params = {
+	"num_classes": 3, "feature_size": 40, "hidden_size": 128,
+	"num_layers": 1, "dropout": 0.1, "bidirectional": False
+}
+commands_model = command_processor.engine.LSTMCommands(**model_params, device=device)
+params_path = "commands_processor/neuralnet/commands.pt"
 
-	# This process is responsible for changing the WAKEWORD_DETECTED signal 
+commands_model.load_state_dict(torch.load(params_path)["model_state_dict"])
+commands_model = model.to(device)
 
-if __name__=="__main__":
-	# Online Mode 
-	# The Online Mode is supported by a voice assistant that can respond the voice requests of the user in order to execute commands
-	if (check_connection()):
+audio_transform = get_featurizer(8000)
 
-		# Start wakeword detection process on another thread. This process is responsible for alerting the command execution process to either start or stop a command
+## Guidance System
+guide = GuideSystem()
+
+## Scene Description System
+describe = SceneDescribeSystem()
+
+## Reading system
+read = ReadingSytem()
+
+# Module Functions
+
+## WakeWord 
+def wakeword_action(prediction):
+	if prediction == 1:
+		WAKEWORD_DETECTED = True
+		playsound("devs_and_utils/presets/greet.wav")
+		command = threading.Thread(target=commands_run, args=())
+		print("Starting Command Sequence ...")
+		WAKEWORD_DETECTED = False
+		command.start()
+	
+## Commands Detector
+def record_audio(seconds=5):
+	chunk = 1024
+	sample_format = pyaudio.paInt16
+	channels = 1
+	fs = 8000
+	filename = "voice_command.wav"
+	
+	p = pyaudio.PyAudio()
+	
+	print("Recording")
+	
+	stream = p.open(format=sample_format,
+					channels=channels,
+					rate=fs,
+					frames_per_buffer=chunk,
+					input=True)
 		
-		# Continously loop, waiting for wakeword to give wakeword detected signal
-		while True:
-			if WAKEWORD_DETECTED:
-				WAKEWORD_DETECTED = False
+	frames = []
+	
+	for i in range(0, int(fs/chunk * seconds)):
+		data = stream.read(chunk)
+		frames.append(data)
+	
+	stream.stop_stream()
+	stream.close()
+		
+	p.terminate()
+	
+	print("Finished recording")
+	
+	wf = wave.open(filename, "wb")
+	wf.setnchannels(channels)
+	wf.setsampwidth(p.get_sample_size(sample_format))
+	wf.setframerate(fs)
+	wf.writeframes(b''.join(frames))
+	wf.close()
 
-				# TODO: Add command detection process and set result to variable command
-				command = COMMAND.run()
-				
-				if command == 0:
-					# Guidance system runs indefinitely until the wakeword is detected
-					while WAKEWORD_DETECTED == False:
-						GUIDE.run()
+def open_and_transform_audio():
+	# Transform the recorded audio for inference by commands detection model
+	waveform, sr = torchaudio.load("voice_command.wav")
+	os.remove("voice_command.wav")
+	mfcc = audio_transform(waveform).transpose(1, 2).transpose(0, 1)
+	mfcc = mfcc.to(device)	
 
-				else if command == 1:
-					# TODO: Add scene description process	
-					DESCRIBE.run()
+	return mfcc
 
-				else if command == 2:
-					# TODO: Add reading process 
-					READ.run()
+def commands_run():
+	global WAKEWORD_DETECTED # Main thread will change this signal if the wakeword is detected, prompting function to stop executing
 
-	# Offline Mode
-	# The Offline Mode is supported by two side buttons on the VICS gear enclosure that signal the execution of processes
+	# Record Audio for voice command
+	record_audio()
+	start_t = time.time()
+	output = commands_model(open_and_transform_audio())[0]
+
+	_, pred = torch.max(torch.sigmoid(output), dim=1)
+	print(f"[INFO] Detected \"{commands_names[pred]}\" command in {start_t - time.time()} seconds!")
+
+	if pred == 0:
+		# Play preset response
+		playsound("devs_and_utils/presets/guide.wav")
+
+		while WAKEWORD_DETECTED == False:
+			guide.run(cam)
+			
 	else:
-		# Set up GPIO pins for the buttons
-		GPIO.setmode(GPIO.BOARD)
-		GPIO.setup(BUTTON0, GPIO.IN, initial=GPIO.LOW)
-		GPIO.setup(BUTTON1, GPIO.IN, initial=GPIO.LOW)  
+		if pred == 1:
+			playsound("devs_and_utils/presets/describe.wav")
+		elif pred == 2:
+			playsound("devs_and_utils/presets/read.wav")
 
-		# Stores state of buttons
-		button0 = GPIO.input(BUTTON0)
-		button1 = GPIO.input(BUTTON1)
+		start_t = time.time()
 
-		# Activate command 0 or 1
-		activate0 = 0
-		activate1 = 0
+		if pred == 1:
+			response = describe.run(cam=cam)
+			print("[INFO] Scene Description detected objects in {start_t - time.time()} seconds!")
+		elif pred == 2:
+			response = read.run(cam=cam)
+			print("[INFO] eading completed in {start_t - time.time()} seconds!")
 
-		while True:
-			current0 = GPIO.input(BUTTON0)
-			current1 = GPIO.input(BUTTON1)
+		voice.text_to_speech(voice_name=voice_name, text=response, name="response") # Turn generated response to speech
+		playsound("response.wav") # play response on speakers
+		os.remove("response.wav") # Delete generate response file
 
-			# If a button changes its state, set its process' activation to that state and set the activation of the other process' to 0
-			if button0 != current0:
-				activate0 = current0
-				activate1 = GPIO.LOW
-		
-			if button1 != current1:
-				activate0 = GPIO.LOW
-				activate1 = current1
-		
-			button0 = current0
-			button1 = current1
-	
-			if activate0:
-				# Run guidance process
-				GUIDE.run()
-	
-			else if activate1:
-				# Run objection detectoin process
-				DESCRIBE.run()
-							
+
+if __name__ == "__main__":
+	print("Settting up device ... this should take a few seconds")
+	read.run()
+
+	action = wakeword_action() # This action is called by the wakeword whenever it makes a prediction. It activates the command detection and run sequence
+	wakeword_engine.run(action)	
+	threading.Event().wait()
