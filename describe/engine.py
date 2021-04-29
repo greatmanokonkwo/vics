@@ -5,29 +5,18 @@ The engine then uses a text-to-speech module to say what was in the captured sce
 import cv2
 import asyncio
 
-import os
-os.sys.path.append("..")
-
 import numpy as np
-from devs_and_utils.picam import picam
-from devs_and_utils.google_voice import GoogleVoice
 from detector import ObjectDetector
-
-import time # Take out
 
 from playsound import playsound
 
+
 class SceneDescribeSystem:
 	
-	def __init__(self, scene_size=416, division=1):
+	def __init__(self, division=1):
+		"""Modules"""	
 		self.division = division # Use _get_object_location1 or __get_object_location2
-		self.scene_size = scene_size
-
-		# Raspbery Pi Cam for taking 416x416 images of scenery
-		self.cam = picam(width=scene_size, height=scene_size)
-	
-		# Speech to text module
-		self.voice = GoogleVoice()
+		self.scene_size = None
 
 		# object detector
 		self.detector = ObjectDetector()
@@ -79,71 +68,61 @@ class SceneDescribeSystem:
 	# Take in a list of objects detected in scene and return an appropriate text response that describes the scene
 	def __generate_response(self, objs):
 		response = ""
-	
-		num_objs = len(objs)
 
-		for i in range(num_objs):
-			if i == (num_objs-1):
-				response += ("and ")
-	
-			response += ("there is ")
-			if objs[i][0][0] in ["a","e","i","o","u"]:
-				response += ("an ")
+		for key in objs:
+			locs = objs[key]
+			n = len(locs)
+
+			if n > 1:
+				key_str = f"There are {n} {key}s in the scene "
 			else:
-				response += ("a ")
+				key_str = f"There is one {key} in the scene at the {locs[0]}. "
+				response += key_str
+				continue
+			
+			for i in range(n):
+				if i == n-1 and n > 1:
+					key_str += "and "
+				key_str += f"one at the {locs[i]} "
+		
+			key_str += ". "
+			response += (key_str)
+		
+		return response
 
-			response += ("{0} at the ".format(objs[i][0]))
-			response += ("{0} corner of the scene, ".format(objs[i][1]))
-
-		return response[:-2] # get rid of extra ", " at end
-
-	def cleanup(self):
-		self.cam.cleanup()
-
-	def run(self):
+	def run(self, cam):
 		# Capture the scene and returned voice response of the objects in the scene def run(self, division=2): # Capture image
-		img = self.cam.capture_image()
-		#img = cv2.imread("dog-cycle-car.png")
+		#img = cam.capture_image()
+		img = cv2.imread("imgs/1.jpg")
+		(H, W) = img.shape[:2]
+		self.scene_size = W	
 	
-		start = time.time()
 		# Run inference
 		res = self.detector.detect(img)
-		end = time.time()
-		print(f"Ran inference in {end - start} seconds!")
 
 		response = None
-		if type(res) != int:
+		if len(res) > 0:
 			# Create python list of the objects of the format [class_name, object_location]
-			objs = []
+			objs = {}
+			for obj in res:
+				objs.update({obj[4]: []})
+
 			for obj in res:
 				if self.division == 1:
-					objs.append([obj[4], self.__get_object_location1(obj[0], obj[1], obj[2], obj[3])])
+					location = self.__get_object_location1(obj[0], obj[1], obj[2], obj[3])
 				else:
-					objs.append([obj[4], self.__get_object_location2(obj[0], obj[1], obj[2], obj[3])])
+					location = self.__get_object_location2(obj[0], obj[1], obj[2], obj[3])
 		
+				objs[obj[4]].append(location)
+
 			# Generate response using list
 			response = self.__generate_response(objs)
 
 		else:
 			response = "Sorry, no objects were detected."
 
-		print(response)
-		
-		# Turn generated response to speech
-		self.voice.text_to_speech(voice_name="en-GB-Standard-B", text=response, name="response")	
-
-		# Send generated audio file "response.wav" to speakers
-		response_wav = open("response.wav", "rb")
-
-		playsound("response.wav") # play repsonse on speakers
-
-		# Delete response.wav
-		os.remove("response.wav")
-		
+		return response
+	
 if __name__=="__main__":
 	system = SceneDescribeSystem()
-	start = time.time()
-	while True:
-		system.run()
-	system.cleanup()
-
+	system.run()

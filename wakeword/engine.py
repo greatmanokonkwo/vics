@@ -1,5 +1,5 @@
 """the interface to interact with wakeword model"""
-import os.sys
+from os import sys
 sys.path.append("..")
 
 import pyaudio
@@ -12,9 +12,33 @@ import torch
 import numpy as np
 from neuralnet.dataset import get_featurizer
 from threading import Event
+from playsound import playsound
+from neuralnet.model import LSTMWakeWord
 
-from devices.listener import Listener
+class Listener:
 
+    def __init__(self, sample_rate=8000, record_seconds=2):
+        self.chunk = 1024
+        self.sample_rate = sample_rate
+        self.record_seconds = record_seconds
+        self.p = pyaudio.PyAudio()
+        self.stream = self.p.open(format=pyaudio.paInt16,
+                        channels=1,
+                        rate=self.sample_rate,
+                        input=True,
+                        output=True,
+                        frames_per_buffer=self.chunk)
+
+    def listen(self, queue):
+        while True:
+            data = self.stream.read(self.chunk , exception_on_overflow=False)
+            queue.append(data)
+            time.sleep(0.01)
+
+    def run(self, queue):
+        thread = threading.Thread(target=self.listen, args=(queue,), daemon=True)
+        thread.start()
+        print("\nWake Word Engine is now listening... \n")
 
 class WakeWordEngine:
 
@@ -25,7 +49,7 @@ class WakeWordEngine:
         self.featurizer = get_featurizer(sample_rate=8000)
         self.audio_q = list()
 
-    def save(self, waveforms, fname="wakeword_temp"):
+    def save(self, waveforms, fname="wakeword_temp.wav"):
         wf = wave.open(fname, "wb")
         # set the channels
         wf.setnchannels(1)
@@ -82,20 +106,10 @@ class DemoAction:
         # importing unecessary modules during production usage
         import os
         import subprocess
-        import random
-        from os.path import join, realpath
 
-        self.random = random
-        self.subprocess = subprocess
         self.detect_in_row = 0
 
         self.sensitivity = sensitivity
-        folder = realpath(join(realpath(__file__), '..', '..', '..', 'fun', 'arnold_audio'))
-        self.arnold_mp3 = [
-            os.path.join(folder, x)
-            for x in os.listdir(folder)
-            if ".wav" in x
-        ]
 
     def __call__(self, prediction):
         if prediction == 1:
@@ -107,19 +121,14 @@ class DemoAction:
             self.detect_in_row = 0
 
     def play(self):
-        filename = self.random.choice(self.arnold_mp3)
-        try:
-            print("playing", filename)
-            self.subprocess.check_output(['play', '-v', '.1', filename])
-        except Exception as e:
-            print(str(e))
-
+        playsound("/home/greatman/code/vics/devs_and_utils/presets/greet.wav")
+		
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="demoing the wakeword engine")
     parser.add_argument('--model_file', type=str, default=None, required=True,
                         help='optimized file to load. use optimize_graph.py')
-    parser.add_argument('--sensitivty', type=int, default=10, required=False,
+    parser.add_argument('--sensitivty', type=int, default=1, required=False,
                         help='lower value is more sensitive to activations')
 
     args = parser.parse_args()

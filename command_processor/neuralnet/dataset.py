@@ -1,20 +1,15 @@
+import os
 import torch
 import torch.nn as nn
 import torchaudio
-from audioutils import MFCC, get_featurizer, SpecAugment 
+import pandas as pd
+from devs_and_utils.audio_utils import MFCC, get_featurizer, SpecAugment 
 
-class CommandsDataset(Dataset):
+class CommandsData(torch.utils.data.Dataset):
 
-	def __init__(self, data_path, transform=None, sample_rate=8000, valid=False):
-		self.DATA_PATH = data_path
-		self.data = []
-		self.transform = transform
-
-		for i in range(3):
-			filenames = os.listdir(self.DATA_PATH + "/" str(i))
-			for f in filenames:
-				data.append((f, i))
-	
+	def __init__(self, data_json, sample_rate=8000, valid=False):
+		self.sr = sample_rate
+		self.data = pd.read_json(data_json, lines=True)
 		if valid:
 			self.audio_transform = get_featurizer(sample_rate)
 		else:
@@ -22,22 +17,22 @@ class CommandsDataset(Dataset):
 				get_featurizer(sample_rate),
 				SpecAugment(rate=0.5)
 			)
-
+		
 	def __len__(self):
 		return len(self.data)
 
 	def __getitem__(self, idx):
 		if torch.is_tensor(idx):
 			idx = idx.item()
-
+	
 		try:
-			file_path = self.data[idx][0]
-			waveform, sr = torchaudio.load(file_path, normalization=False)
+			file_path = self.data.key.iloc[idx]
+			waveform, sr = torchaudio.load(file_path)
 			if sr > self.sr:
 				waveform = torchaudio.transforms.Resample(sr, self.sr)(waveform)
 			mfcc = self.audio_transform(waveform)
-			label = self.data[idx][1]
-
+			label = self.data.label.iloc[idx]
+			
 		except Exception as e:
 			print(str(e), file_path)
 			return self.__getitem__(torch.randint(0, len(self), (1,)))

@@ -1,13 +1,13 @@
-"""wakeword model"""
+"""Commands Detector Module"""
 import torch
 import torch.nn as nn
 
 
-class LSTMWakeWord(nn.Module):
+class LSTMCommands(nn.Module):
 
 	def __init__(self, num_classes, feature_size, hidden_size,
-				num_layers, dropout, bidirectional, device='cpu'):
-		super(LSTMWakeWord, self).__init__()
+				num_layers, dropout, bidirectional, device):
+		super(LSTMCommands, self).__init__()
 		self.num_layers = num_layers
 		self.hidden_size = hidden_size
 		self.directions = 2 if bidirectional else 1
@@ -26,8 +26,7 @@ class LSTMWakeWord(nn.Module):
 	def forward(self, x):
 		# x.shape => seq_len, batch, feature
 		x = self.layernorm(x)
-		print(x.shape)
 		hidden = self._init_hidden(x.size()[1])
 		out, (hn, cn) = self.lstm(x, hidden)
 		out = self.classifier(hn)
-		return out
+		return out     

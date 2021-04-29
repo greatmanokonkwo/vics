@@ -12,7 +12,6 @@ import argparse
 import time
 import os
 
-
 class Listener:
 
     def __init__(self, args):

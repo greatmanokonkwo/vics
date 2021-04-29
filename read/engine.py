@@ -1,27 +1,25 @@
-import os
-os.sys.path.append("..")
-
-from imutils.object_detection import non_max_suppression
+import time
 import numpy as np
 import pytesseract
 import cv2
+import time
 
-from devs_and_utils.picam import picam
-from devs_and_utils.google_voice import GoogleVoice
-
+from imutils.object_detection import non_max_suppression
 from playsound import playsound
 
 class ReadingSystem:
-	def __init__(self, width=, height=480, min_confidence=0.5, padding=0.05):
+	def __init__(self, width=928, height=928, min_confidence=0.5, padding=0.05):
 		self.width = width
 		self.height = height
 		self.min_confidence = min_confidence
 		self.padding = padding
 
-		# Raspberry Pi Camfor taking images of scenery
-		self.cam = picam(width=width, height=height)
-		self.voice = GoogleVoice()
-	
+		# load the pre-trained EAST text detector
+		print("[INFO] Loading EAST text detector...")
+		self.net = cv2.dnn.readNet("/home/greatman/code/vics/read/frozen_east_text_detection.pb")
+		self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+		self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+
 	def __decode_predictions(self, scores, geometry):
 		# grab the nubmer of rows and columsn from the scores volume, then
 		# initialize our set of bounding box rectangles and corresponding
@@ -80,9 +78,12 @@ class ReadingSystem:
 		return rects, confidences
 
 	def run(self):		
+		start = time.time()
 		# capture the input image that contains text to be read
-		#img = self.cam.capture_image()
-		img = cv2.imread("test.jpg")	
+		img = self.cam.capture_image()
+		#img = cv2.imread("/home/greatman/code/vics/read/test.jpg")	
+
+		start_t = time.time()
 		orig = img.copy()
 		origH, origW = img.shape[:2]
 		
@@ -103,28 +104,28 @@ class ReadingSystem:
 		layerNames = [
 			"feature_fusion/Conv_7/Sigmoid",
 			"feature_fusion/concat_3"]
-
-		# load the pre-trained EAST text detector
-		print("[INFO] Loading EAST text detector...")
-		net = cv2.dnn.readNet("frozen_east_text_detection.pb")
-
+		
 		# construct a blob from the image and then perform a forward pass of 
 		# the model to obtain the two output layer sets
 		blob = cv2.dnn.blobFromImage(img, 1.0, (W, H),
 			(123.68, 116.78, 103.94), swapRB=True, crop=False)
-		net.setInput(blob)
-		scores, geometry = net.forward(layerNames)
+		self.net.setInput(blob)
+		scores, geometry = self.net.forward(layerNames)
 
 		# decode the predictions, then  apply non-maxima suppression to
 		# suppress weak, overlapping bounding boxes
 		rects, confidences = self.__decode_predictions(scores, geometry)
 		boxes = non_max_suppression(np.array(rects), probs=confidences)
 
+		start_t = time.time()
+
 		# initialize the list of results
 		results = []
 
 		# loop over the bounding boxes
+		count = 0
 		for (startX, startY, endX, endY) in boxes:
+			count += 1
 			# scale the bounding box coordinates based on the respective
 			# ratios
 			startX = int(startX * rW)
@@ -146,6 +147,7 @@ class ReadingSystem:
 
 			# extract the actual padded ROI
 			roi = orig[startY:endY, startX:endX]
+			cv2.imwrite(f"img{count}.jpg", roi)	
 
 			# in order to apply Tesseract v4 to OCR text we must supply
 			# (1) a language, (2) an OEM flag of 4, indicating that the we
@@ -160,7 +162,27 @@ class ReadingSystem:
 			results.append(((startX, startY, endX, endY), text))
 	
 		results = sorted(results, key=lambda r:(r[0][1], r[0][0]))
-		print (results)
+
+		
+		# loop over the results
+		count =1 
+		for ((startX, startY, endX, endY), text) in results:
+			# display the text OCR'd by Tesseract
+			print("OCR TEXT")
+			print("========")
+			print("{}\n".format(text))
+			# strip out non-ASCII text so we can draw the text on the image
+			# using OpenCV, then draw the text and a bounding box surrounding
+			# the text region of the input image
+			text = "".join([c if ord(c) < 128 else "" for c in text]).strip()
+			output = orig.copy()
+			cv2.rectangle(output, (startX, startY), (endX, endY),
+				(0, 0, 255), 2)
+			cv2.putText(output, text, (startX, startY - 20),
+			cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+			cv2.imwrite(f"detect{count}.jpg", output)
+			count+=1
+
 		results = self.__sort_by_line(results)
 
 		results = sorted(results, key=lambda r:(r[0][1], r[0][0]))
@@ -170,12 +192,7 @@ class ReadingSystem:
 			text += " "
 			response += text
 
-		print(response)
-
-		self.voice.text_to_speech(voice_name="en-GB-Standard-B", text=response, name="response")
-	
-		playsound("response.wav")
-		os.remove("response.wav")
+		return response
 
 	# we want to read the words on the image line by line and left to right
 	# so we are given y-coordinates by the localization coordinates so we must group each of 
@@ -214,10 +231,6 @@ class ReadingSystem:
 
 		return results_by_line	
 
-	def cleanup(self):
-		self.cam.cleanup()
-
 if __name__=="__main__":
 	system = ReadingSystem()
 	system.run()
-	system.cleanup()	
