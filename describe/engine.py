@@ -92,11 +92,7 @@ class SceneDescribeSystem:
 
 	def run(self, cam):
 		# Capture the scene and returned voice response of the objects in the scene def run(self, division=2): # Capture image
-<<<<<<< HEAD
-		#img = self.cam.capture_image()
-=======
 		#img = cam.capture_image()
->>>>>>> e2991caa0b3fcdd856661b2f5a8d4e9b7cefdd31
 		img = cv2.imread("imgs/1.jpg")
 		(H, W) = img.shape[:2]
 		self.scene_size = W	

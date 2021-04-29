@@ -2,13 +2,18 @@ import os
 import time
 import threading
 import playsound
+<<<<<<< HEAD
 #import Jetson.GPIO as GPIO
+=======
+import Jetson.GPIO as GPIO
+>>>>>>> 40c4c125e3f3837dbdf28e6be73a6f1a5c234e21
 import pyaudio
 import wave
 
 import torch
 import torchaudio
 
+<<<<<<< HEAD
 import wakeword.engine
 from wakeword import neuralnet
 import command_processor
@@ -19,6 +24,16 @@ import read
 from devs_and_utils.picam import picam
 from devs_and_utils.audio_utils import get_featurizer
 from devs_and_utils.google_voice import GoogleVoice
+=======
+from wakeword.engine import WakeWordEngine, DemoAction
+from command_processor.engine import LSTMCommands
+from guide.engine import GuideSystem
+from describe.engine import SceneDescribeSystem 
+from read.engine import ReadingSystem
+
+from devs_and_utils.picam import picam
+from devs_and_utils.audio_utils import get_featurizer
+>>>>>>> 40c4c125e3f3837dbdf28e6be73a6f1a5c234e21
 
 """
 COMMAND 0 (Guide): This enable to GuideNet process that relays angles of direction to travel in to the user, using vibrations
@@ -49,7 +64,11 @@ model_params = {
 	"num_classes": 3, "feature_size": 40, "hidden_size": 128,
 	"num_layers": 1, "dropout": 0.1, "bidirectional": False
 }
+<<<<<<< HEAD
 commands_model = command_processor.engine.LSTMCommands(**model_params, device=device)
+=======
+commands_model = LSTMCommands(**model_params, device=device)
+>>>>>>> 40c4c125e3f3837dbdf28e6be73a6f1a5c234e21
 params_path = "commands_processor/neuralnet/commands.pt"
 
 commands_model.load_state_dict(torch.load(params_path)["model_state_dict"])
@@ -58,7 +77,11 @@ commands_model = model.to(device)
 audio_transform = get_featurizer(8000)
 
 ## Guidance System
+<<<<<<< HEAD
 guide = GuideSystem()
+=======
+guide = GuideSystem
+>>>>>>> 40c4c125e3f3837dbdf28e6be73a6f1a5c234e21
 
 ## Scene Description System
 describe = SceneDescribeSystem()
@@ -146,7 +169,11 @@ def commands_run():
 	else:
 		if pred == 1:
 			playsound("devs_and_utils/presets/describe.wav")
+<<<<<<< HEAD
 		elif pred == 2:
+=======
+		else pred == 2:
+>>>>>>> 40c4c125e3f3837dbdf28e6be73a6f1a5c234e21
 			playsound("devs_and_utils/presets/read.wav")
 
 		start_t = time.time()
@@ -154,7 +181,11 @@ def commands_run():
 		if pred == 1:
 			response = describe.run(cam=cam)
 			print("[INFO] Scene Description detected objects in {start_t - time.time()} seconds!")
+<<<<<<< HEAD
 		elif pred == 2:
+=======
+		else if pred == 2:
+>>>>>>> 40c4c125e3f3837dbdf28e6be73a6f1a5c234e21
 			response = read.run(cam=cam)
 			print("[INFO] eading completed in {start_t - time.time()} seconds!")
 

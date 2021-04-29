@@ -11,26 +11,19 @@ class MotionData(Dataset):
 
 	def __init__(self, data_json, reso=256):
 		self.reso = reso
-		json_data = pd.read_json(data_json, lines=True)
+		self.data = pd.read_json(data_json, lines=True)
 
 		trans = [transforms.ColorJitter(brightness=1, contrast=0.5, saturation=1, hue=0.5),
 						transforms.GaussianBlur(kernel_size=31, sigma=5)]
 		
 		self.data_augment = transforms.RandomChoice(trans)
 
-		transform = transforms.ToTensor()
+		self.transform = transforms.Compose([
+							transforms.ToTensor(),
+							transforms.Normalize((0.4849, 0.4798, 0.4740), 
+												 (0.1678, 0.17325, 0.1815))
+						 ])
 
-		self.data = []
-		n = len(json_data)
-
-		for i in range(n):
-			print(i)
-			file_path = json_data.key.iloc[i]
-			img_ = transform(Image.open(file_path))
-			label = json_data.label.iloc[i]
-	
-			self.data.append((img_, label))
-		
 	def __len__(self):
 		return len(self.data)
 
@@ -38,7 +31,11 @@ class MotionData(Dataset):
 		if torch.is_tensor(idx):
 			idx = idx.item()
 	
-		return self.data[idx]
+		file_path = self.data.key.iloc[idx]
+		img_ = self.transform(Image.open(file_path))
+		label = self.data.label.iloc[idx]
+	
+		return img_, label
 	
 	def create_data_augmentations(self):
 		n = self.__len__()
@@ -56,19 +53,25 @@ def augment():
 	test_data.create_data_augmentations()
 
 def norm_vals():
-	print(1)
-	imgs = torch.stack([img_t for img_t, _ in train_data], dim=3)
-	print(imgs.shape)
-	means_per_channel = imgs.view(3, -1).mean(dim=1)
-	std_per_channel = imgs.view(3, -1).STD(dim=1)
-	print(means_per_channel)
-	print(std_per_channel)
+	n = len(train_data)
+	ends = [0, int(n/2), n]
+	p = 1 # set p=0 for first half of data and p=1 for second half
 
-	print(train_imgs)
+	data = []
+	for i in range(1):
+		for j in range(ends[p], ends[p+1]):
+			print(j, end="\r")
+			data.append(train_data[j][0])
+
+		imgs = torch.stack(data, dim=3)
+		means_per_channel = imgs.view(3, -1).mean(dim=1)
+		std_per_channel = imgs.view(3, -1).std(dim=1)
+		print(means_per_channel)
+		print(std_per_channel)
+		print()
 
 train_data = MotionData(data_json="/home/greatman/code/vics/guide/neuralnet/train.json")
 #test_data = MotionData(data_json="/home/greatman/code/vics/guide/neuralnet/test.json")
 
 if __name__=="__main__":
-	print(train_data[0])
-	norm_vals()	
+	norm_vals()

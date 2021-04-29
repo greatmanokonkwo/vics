@@ -14,19 +14,12 @@ class ReadingSystem:
 		self.min_confidence = min_confidence
 		self.padding = padding
 
-<<<<<<< HEAD
-		# Raspberry Pi Camfor taking images of scenery
-		self.cam = picam(width=width, height=height)
-		#self.voice = GoogleVoice()
-	
-=======
 		# load the pre-trained EAST text detector
 		print("[INFO] Loading EAST text detector...")
 		self.net = cv2.dnn.readNet("/home/greatman/code/vics/read/frozen_east_text_detection.pb")
 		self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
 		self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
 
->>>>>>> e2991caa0b3fcdd856661b2f5a8d4e9b7cefdd31
 	def __decode_predictions(self, scores, geometry):
 		# grab the nubmer of rows and columsn from the scores volume, then
 		# initialize our set of bounding box rectangles and corresponding
@@ -111,17 +104,13 @@ class ReadingSystem:
 		layerNames = [
 			"feature_fusion/Conv_7/Sigmoid",
 			"feature_fusion/concat_3"]
-<<<<<<< HEAD
 
 		# load the pre-trained EAST text detector
 		print("[INFO] Loading EAST text detector...")
 		net = cv2.dnn.readNet("frozen_east_text_detection.pb")
-		#net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-		#net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+		net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+		net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
 
-=======
-		
->>>>>>> e2991caa0b3fcdd856661b2f5a8d4e9b7cefdd31
 		# construct a blob from the image and then perform a forward pass of 
 		# the model to obtain the two output layer sets
 		blob = cv2.dnn.blobFromImage(img, 1.0, (W, H),
