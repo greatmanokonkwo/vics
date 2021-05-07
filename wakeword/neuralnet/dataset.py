@@ -39,3 +39,21 @@ class WakeWordData(torch.utils.data.Dataset):
 			return self.__getitem__(torch.randint(0, len(self), (1,)))
 
 		return mfcc, label
+
+def norm_vals():
+	n = len(train_data)
+	ends = [0, int(n/
+	p = 0
+
+	data = []
+	for i in range(ends[p], ends[p+1]):
+		print(j, end="\r")
+		data.append(train_data[j][0]
+		
+	imgs = torch.stack(data, dim=3)
+	means_per_channel = imgs.view(3, -1).mean(dim=1)
+	std_per_channel = imgs.view(3, -1).std(dim=1)
+	print(means_per_channel)
+	print(std_per_channel)
+	print()
+
