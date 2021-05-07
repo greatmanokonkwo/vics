@@ -104,7 +104,13 @@ class ReadingSystem:
 		layerNames = [
 			"feature_fusion/Conv_7/Sigmoid",
 			"feature_fusion/concat_3"]
-		
+
+		# load the pre-trained EAST text detector
+		print("[INFO] Loading EAST text detector...")
+		net = cv2.dnn.readNet("frozen_east_text_detection.pb")
+		net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+		net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+
 		# construct a blob from the image and then perform a forward pass of 
 		# the model to obtain the two output layer sets
 		blob = cv2.dnn.blobFromImage(img, 1.0, (W, H),

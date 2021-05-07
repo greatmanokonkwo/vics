@@ -9,22 +9,18 @@ that is revised to work for the GuideNet tasks of movement angle prediction and 
 It outputs a softmax classification over 10 classes, 9 of which are angles of direction while the last one is the halt signal
 
 Class 0 = -PI/2 rad
-Class 1 = -3PI/8 rad
-Class 2 = -PI/4 rad
-Class 3 = -PI/8 rad
-Class 4 = 0 rad
-Class 5 = PI/8 rad
-Class 6 = PI/4 rad
-Class 7 = 3PI/8 rad
-Class 8 = PI/2 rad
-Class 9 = Halt Signal
+Class 1 = -PI/4 rad
+Class 2 = 0 rad
+Class 3 = PI/4 rad
+Class 4 = PI/2 rad
+Class 5 = Halt Signal
 """
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 class GuideCNN(nn.Module):
-	def __init__(self, dropout_ratio=0.25):
+	def __init__(self, reso=256, dropout_ratio=0.25):
 		super().__init__()
 		self.conv1 = nn.Conv2d(3, 16, kernel_size=3, padding=1)
 		self.conv2 = nn.Conv2d(16, 8, kernel_size=3, padding=1)

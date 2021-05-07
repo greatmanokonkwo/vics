@@ -6,6 +6,17 @@
 VICS is an end-to-end learning based visual impairment device that strives to make the world more accessible to the visually impaired. VICS is currently made up of three separate systems that work to bring the world to the user via a suite of information rallying devices including vibration motors and speech enabled assistance.
 
 ## Running on native machine
+### Hardware Configuration
+```
+sudo /opt/nvidia/jetson-io/jetson-io.py (Configure mic hardware first then configure i2s4 pins)
+sudo grep dap4 /sys/kernel/debug/tegra_pinctrl_reg
+alsactl init tegrasndt210ref
+amixer -c tegrasndt210ref cset name="MVC1 Mux" I2S4
+amixer -c tegrasndt210ref cset name="ADMAIF1 Mux" MVC1
+amixer -c tegrasndt210ref cset name="MVC1 Vol" 13500
+amixer -c tegrasndt210ref cset name='I2S4 codec bit format' 32
+amixer -c tegrasndt210ref sget "MVC1 Channels"
+````
 
 ### Pytorch prerequisites
 ```

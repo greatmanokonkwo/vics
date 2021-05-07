@@ -1,0 +1,39 @@
+- Train guidance system with chapel data
+- Work on 5 page report 
+- Work on high quality object detection video
+- Work on high quality reading detection video
+- Find other information that can be included
+- Intro
+- Problem
+- How to solve the problem: AI, 
+- Results: How the device works
+- Conclusion: Worked and improvements
+- Practice in front of someone that doens't know anything about this
+- Key things simple
+- Create flowchart
+- Stopping condition analysis by VICS
+- Why we stop in front of humans (dynamic movement)
+
+WHY?
+
+- Vision system in terms of hardware is cheaper and smaller
+- Vision can also detect things other sensors such as LiDar can such as crosswalks
+- Vision nav system can be used is combination with other vision applications such as detection
+
+WHAT'S NEXT
+ 
+- Navigating dynamic environments (VICS is currently not trained for environments where things are constantly moving at high rates, such as busy streets, malls and other public places. The navigation system would need to be complete reenvisioned in order to work in dynamic environments)
+- Collecting more training data (the more data the better the naviation system)
+- Improving the VICS reading abilities, such as reading entire pages of books and reading hand-written letters. These features would require a whoel new suite of computer vision methods for analyzing images for text.
+- Adding gps locations and maps in order to create goals for navigator
+- Proximity calculations
+ 
+VICS Performs two things scenery navigation and analysis. Under analysis it detects objects, text, and other useful information (such as stopping condition reasons, why VICS stopped user) 
+
+GOAL: To make a interactive and easy to use visual aid device that improves the environment perception and navigation for its user.
+
+For the motion angle if strapped the prototype VICS to my chest and calculated the angle of motion I made using an MPU9250 sensor then classifiy the angle of motion. For the stopping conditions I took many images of doors, stairs, crosswalks and people and set that as the 5 class
+
+EXPLAIN HOW VICS COMMUNICATES ANGLES TO USERS USING VIBRATION MOTORS!
+
+- TALK ABOUT TRAINING GUIDECNN WITH STOCHASTIC GRADIENT DESCENT AND FAILING AND THEN USING ADAMW FOR FAST CONVERGENCE
