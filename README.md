@@ -16,6 +16,7 @@ amixer -c tegrasndt210ref cset name="ADMAIF1 Mux" MVC1
 amixer -c tegrasndt210ref cset name="MVC1 Vol" 13500
 amixer -c tegrasndt210ref cset name='I2S4 codec bit format' 32
 amixer -c tegrasndt210ref sget "MVC1 Channels"
+````
 
 ### Pytorch prerequisites
 ```
