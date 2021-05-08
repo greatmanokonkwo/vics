@@ -95,12 +95,11 @@ class WakeWordEngine:
                                     args=(action,), daemon=True)
         thread.start()
 
-
+"""
 class DemoAction:
-    """This demo action will just randomly say Arnold Schwarzenegger quotes
+    This demo action will just randomly say Arnold Schwarzenegger quotes
         args: sensitivty. the lower the number the more sensitive the
         wakeword is to activation.
-    """
     def __init__(self, sensitivity=10):
         # import stuff here to prevent engine.py from 
         # importing unecessary modules during production usage
@@ -122,23 +121,27 @@ class DemoAction:
 
     def play(self):
         playsound("/home/greatman/code/vics/devs_and_utils/presets/greet.wav")
+"""
+
+def action(predict):
+	if predict == 1:
+		print("Detected")
 		
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="demoing the wakeword engine")
-    parser.add_argument('--model_file', type=str, default=None, required=True,
+    parser.add_argument('--model_file', type=str, default="neuralnet/optimized.py", required=False,
                         help='optimized file to load. use optimize_graph.py')
     parser.add_argument('--sensitivty', type=int, default=1, required=False,
                         help='lower value is more sensitive to activations')
 
     args = parser.parse_args()
     wakeword_engine = WakeWordEngine(args.model_file)
-    action = DemoAction(sensitivity=10)
+    #action = DemoAction(sensitivity=args.sensitivty)
 
     print("""\n*** Make sure you have sox installed on your system for the demo to work!!!
     If you don't want to use sox, change the play function in the DemoAction class
     in engine.py module to something that works with your system.\n
     """)
-    # action = lambda x: print(x)
     wakeword_engine.run(action)
     threading.Event().wait()
