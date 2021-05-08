@@ -42,7 +42,7 @@ class Listener:
 
 class WakeWordEngine:
 
-    def __init__(self, model_file):
+    def __init__(self, model_file="/home/greatman/code/vics/wakeword/neuralnet/wakeword.pt"):
         self.listener = Listener(sample_rate=8000, record_seconds=2)
         self.model = torch.jit.load(model_file)
         self.model.eval().to('cpu')  #run on cpu
